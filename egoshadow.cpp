@@ -18,7 +18,8 @@
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include "fonts.h"
-
+#include <iostream>
+#include <chrono>
 #define ALPHA 1;
 
 //24-bit color:  8 + 8 + 8 = 24
@@ -34,153 +35,153 @@
 //
 //
 class Image {
-public:
-	int width, height;
-	unsigned char *data;
-	~Image() { delete [] data; }
-	Image(const char *fname) {
-		if (fname[0] == '\0')
-			return;
-		//printf("fname **%s**\n", fname);
-		char name[40];
-		strcpy(name, fname);
-		int slen = strlen(name);
-		name[slen-4] = '\0';
-		//printf("name **%s**\n", name);
-		char ppmname[80];
-		sprintf(ppmname,"%s.ppm", name);
-		//printf("ppmname **%s**\n", ppmname);
-		char ts[100];
-		//system("convert eball.jpg eball.ppm");
-		sprintf(ts, "convert %s %s", fname, ppmname);
-		system(ts);
-		//sprintf(ts, "%s", name);
-		FILE *fpi = fopen(ppmname, "r");
-		if (fpi) {
-			char line[200];
-			fgets(line, 200, fpi);
-			fgets(line, 200, fpi);
-			while (line[0] == '#')
-				fgets(line, 200, fpi);
-			sscanf(line, "%i %i", &width, &height);
-			//printf("%i %i\n", width, height);
-            
-            
-            fgets(line, 200, fpi);
-			//get pixel data
-			int n = width * height * 3;			
-			data = new unsigned char[n];			
-			for (int i=0; i<n; i++)
-				data[i] = fgetc(fpi);
-			fclose(fpi);
-		} else {
-			printf("ERROR opening image: %s\n",ppmname);
-			exit(0);
-		}
-		unlink(ppmname);
-	}
+    public:
+        int width, height;
+        unsigned char *data;
+        ~Image() { delete [] data; }
+        Image(const char *fname) {
+            if (fname[0] == '\0')
+                return;
+            //printf("fname **%s**\n", fname);
+            char name[40];
+            strcpy(name, fname);
+            int slen = strlen(name);
+            name[slen-4] = '\0';
+            //printf("name **%s**\n", name);
+            char ppmname[80];
+            sprintf(ppmname,"%s.ppm", name);
+            //printf("ppmname **%s**\n", ppmname);
+            char ts[100];
+            //system("convert eball.jpg eball.ppm");
+            sprintf(ts, "convert %s %s", fname, ppmname);
+            system(ts);
+            //sprintf(ts, "%s", name);
+            FILE *fpi = fopen(ppmname, "r");
+            if (fpi) {
+                char line[200];
+                fgets(line, 200, fpi);
+                fgets(line, 200, fpi);
+                while (line[0] == '#')
+                    fgets(line, 200, fpi);
+                sscanf(line, "%i %i", &width, &height);
+                //printf("%i %i\n", width, height);
+
+
+                fgets(line, 200, fpi);
+                //get pixel data
+                int n = width * height * 3;			
+                data = new unsigned char[n];			
+                for (int i=0; i<n; i++)
+                    data[i] = fgetc(fpi);
+                fclose(fpi);
+            } else {
+                printf("ERROR opening image: %s\n",ppmname);
+                exit(0);
+            }
+            unlink(ppmname);
+        }
 };
-Image img[3] = {"seamless_back.jpg", "bobcat.jpg", "rabbit.png"};
+Image img[3] = {"ds.jpg", "solaire.png", "abyss.png"};
 
 class Texture {
-public:
-	Image *backImage;
-	GLuint backTexture;
-	float xc[2];
-	float yc[2];
+    public:
+        Image *backImage;
+        GLuint backTexture;
+        float xc[2];
+        float yc[2];
 };
 
 class Global {
-public:
-	int xres, yres;
-    int show_credits;
-	Texture tex;
-    Texture bobcat;
-    Texture rabbit;
-	Global() {
-		xres=640, yres=480;
-        show_credits = 0;
-	}
+    public:
+        int xres, yres;
+        int show_credits;
+        Texture tex;
+        Texture solaire;
+        Texture abyss;
+        Global() {
+            xres=1024, yres=1024;
+            show_credits = 0;
+        }
 } g;
 
 class X11_wrapper {
-public:
-    Display *dpy;
-	Window win;
-	GLXContext glc;
-	X11_wrapper() {
-		GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-		//GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, None };
-		setup_screen_res(640, 480);
-		dpy = XOpenDisplay(NULL);
-		if(dpy == NULL) {
-			printf("\n\tcannot connect to X server\n\n");
-			exit(EXIT_FAILURE);
-		}
-		Window root = DefaultRootWindow(dpy);
-		XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
-		if(vi == NULL) {
-			printf("\n\tno appropriate visual found\n\n");
-			exit(EXIT_FAILURE);
-		} 
-		Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
-		XSetWindowAttributes swa;
-		swa.colormap = cmap;
-		swa.event_mask =
-			ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask |
-			ButtonPressMask | ButtonReleaseMask |
-			StructureNotifyMask | SubstructureNotifyMask;
-		win = XCreateWindow(dpy, root, 0, 0, g.xres, g.yres, 0,
-								vi->depth, InputOutput, vi->visual,
-								CWColormap | CWEventMask, &swa);
-		set_title();
-		glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
-		glXMakeCurrent(dpy, win, glc);
-	}
-	void cleanupXWindows() {
-		XDestroyWindow(dpy, win);
-		XCloseDisplay(dpy);
-	}
-	void setup_screen_res(const int w, const int h) {
-		g.xres = w;
-		g.yres = h;
-	}
-	void reshape_window(int width, int height) {
-		//window has been resized.
-		setup_screen_res(width, height);
-		glViewport(0, 0, (GLint)width, (GLint)height);
-		glMatrixMode(GL_PROJECTION); glLoadIdentity();
-		glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-		glOrtho(0, g.xres, 0, g.yres, -1, 1);
-		set_title();
-	}
-	void set_title() {
-		//Set the window title bar.
-		XMapWindow(dpy, win);
-		XStoreName(dpy, win, "scrolling background (seamless)");
-	}
-	bool getXPending() {
-		return XPending(dpy);
-	}
-	XEvent getXNextEvent() {
-		XEvent e;
-		XNextEvent(dpy, &e);
-		return e;
-	}
-	void swapBuffers() {
-		glXSwapBuffers(dpy, win);
-	}
-	void check_resize(XEvent *e) {
-		//The ConfigureNotify is sent by the
-		//server if the window is resized.
-		if (e->type != ConfigureNotify)
-			return;
-		XConfigureEvent xce = e->xconfigure;
-		if (xce.width != g.xres || xce.height != g.yres) {
-			//Window size did change.
-			reshape_window(xce.width, xce.height);
-		}
-	}
+    public:
+        Display *dpy;
+        Window win;
+        GLXContext glc;
+        X11_wrapper() {
+            GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+            //GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, None };
+            setup_screen_res(800, 600);
+            dpy = XOpenDisplay(NULL);
+            if(dpy == NULL) {
+                printf("\n\tcannot connect to X server\n\n");
+                exit(EXIT_FAILURE);
+            }
+            Window root = DefaultRootWindow(dpy);
+            XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
+            if(vi == NULL) {
+                printf("\n\tno appropriate visual found\n\n");
+                exit(EXIT_FAILURE);
+            } 
+            Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
+            XSetWindowAttributes swa;
+            swa.colormap = cmap;
+            swa.event_mask =
+                ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask |
+                ButtonPressMask | ButtonReleaseMask |
+                StructureNotifyMask | SubstructureNotifyMask;
+            win = XCreateWindow(dpy, root, 0, 0, g.xres, g.yres, 0,
+                    vi->depth, InputOutput, vi->visual,
+                    CWColormap | CWEventMask, &swa);
+            set_title();
+            glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
+            glXMakeCurrent(dpy, win, glc);
+        }
+        void cleanupXWindows() {
+            XDestroyWindow(dpy, win);
+            XCloseDisplay(dpy);
+        }
+        void setup_screen_res(const int w, const int h) {
+            g.xres = w;
+            g.yres = h;
+        }
+        void reshape_window(int width, int height) {
+            //window has been resized.
+            setup_screen_res(width, height);
+            glViewport(0, 0, (GLint)width, (GLint)height);
+            glMatrixMode(GL_PROJECTION); glLoadIdentity();
+            glMatrixMode(GL_MODELVIEW); glLoadIdentity();
+            glOrtho(0, g.xres, 0, g.yres, -1, 1);
+            set_title();
+        }
+        void set_title() {
+            //Set the window title bar.
+            XMapWindow(dpy, win);
+            XStoreName(dpy, win, "scrolling background (seamless)");
+        }
+        bool getXPending() {
+            return XPending(dpy);
+        }
+        XEvent getXNextEvent() {
+            XEvent e;
+            XNextEvent(dpy, &e);
+            return e;
+        }
+        void swapBuffers() {
+            glXSwapBuffers(dpy, win);
+        }
+        void check_resize(XEvent *e) {
+            //The ConfigureNotify is sent by the
+            //server if the window is resized.
+            if (e->type != ConfigureNotify)
+                return;
+            XConfigureEvent xce = e->xconfigure;
+            if (xce.width != g.xres || xce.height != g.yres) {
+                //Window size did change.
+                reshape_window(xce.width, xce.height);
+            }
+        }
 } x11;
 
 void init_opengl(void);
@@ -197,15 +198,18 @@ void display_game_over();
 void display_options();
 void return_to_menu();
 void display_menu();
-
+void display_startup();
 
 //===========================================================================
 //===========================================================================
 int main()
 {
-	init_opengl();
-	display_menu();
-	return 0;
+    init_opengl();
+    display_startup();
+
+    display_menu();
+
+    return 0;
 }
 
 unsigned char *buildAlphaData(Image *img)
@@ -250,70 +254,74 @@ unsigned char *buildAlphaData(Image *img)
 
 void init_opengl(void)
 {
-	//OpenGL initialization
-	glViewport(0, 0, g.xres, g.yres);
-	//Initialize matrices
-	glMatrixMode(GL_PROJECTION); glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-	//This sets 2D mode (no perspective)
-	glOrtho(0, g.xres, 0, g.yres, -1, 1);
-	//Clear the screen
-	glClearColor(1.0, 1.0, 1.0, 1.0);
-	//glClear(GL_COLOR_BUFFER_BIT);
-	//Do this to allow texture maps
-	glEnable(GL_TEXTURE_2D);
+    //OpenGL initialization
+    glViewport(0, 0, g.xres, g.yres);
+    //Initialize matrices
+    glMatrixMode(GL_PROJECTION); glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW); glLoadIdentity();
+    //This sets 2D mode (no perspective)
+    glOrtho(0, g.xres, 0, g.yres, -1, 1);
+    //Clear the screen
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    //glClear(GL_COLOR_BUFFER_BIT);
+    //Do this to allow texture maps
+    glEnable(GL_TEXTURE_2D);
     initialize_fonts();
-	//
-	//load the images file into a ppm structure.
-	//
-	g.tex.backImage = &img[0];
-	//create opengl texture elements
-	glGenTextures(1, &g.tex.backTexture);
-	int w = g.tex.backImage->width;
-	int h = g.tex.backImage->height;
-	glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-							GL_RGB, GL_UNSIGNED_BYTE, g.tex.backImage->data);
-	g.tex.xc[0] = 0.0;
-	g.tex.xc[1] = 0.25;
-	g.tex.yc[0] = 0.0;
-	g.tex.yc[1] = 1.0;
-	
-    g.bobcat.backImage = &img[1];
-        //create opengl texture elements
-    glGenTextures(1, &g.bobcat.backTexture);
-    w = g.bobcat.backImage->width;
-    h = g.bobcat.backImage->height;
-    glBindTexture(GL_TEXTURE_2D, g.bobcat.backTexture);
+    //
+    //load the images file into a ppm structure.
+    //
+    g.tex.backImage = &img[0];
+    //create opengl texture elements
+    glGenTextures(1, &g.tex.backTexture);
+    int w = g.tex.backImage->width;
+    int h = g.tex.backImage->height;
+    glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-                            GL_RGB, GL_UNSIGNED_BYTE, g.bobcat.backImage->data);
-    g.bobcat.xc[0] = 0.0;
-    g.bobcat.xc[1] = 1.0;
-    g.bobcat.yc[0] = 0.0;
-    g.bobcat.yc[1] = 1.0;
+            GL_RGB, GL_UNSIGNED_BYTE, g.tex.backImage->data);
+    g.tex.xc[0] = 0.0;
+    g.tex.xc[1] = 0.25;
+    g.tex.yc[0] = 0.0;
+    g.tex.yc[1] = 1.0;
 
 
-    unsigned char *data2 = buildAlphaData(&img[2]);
-    // rabbit
-    //unsigned char *data2 = new unsigned char[h * w * 4]; 
-    g.rabbit.backImage = &img[2];
-    glGenTextures(1, &g.rabbit.backTexture);
-    w = g.rabbit.backImage->width;
-    h = g.rabbit.backImage->height;
-    glBindTexture(GL_TEXTURE_2D, g.rabbit.backTexture);
+
+    unsigned char *data1 = buildAlphaData(&img[1]);
+    //unsigned char *data2 = new unsigned char[h * w * 4];
+    g.solaire.backImage = &img[1];
+    glGenTextures(1, &g.solaire.backTexture);
+    w = g.solaire.backImage->width;
+    h = g.solaire.backImage->height;
+    glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-                            GL_RGBA, GL_UNSIGNED_BYTE, data2);
-    g.rabbit.xc[0] = 0.0;
-    g.rabbit.xc[1] = 1.0;
-    g.rabbit.yc[0] = 0.0;
-    g.rabbit.yc[1] = 1.0;
-        
+            GL_RGBA, GL_UNSIGNED_BYTE, data1);
+    g.solaire.xc[0] = 0.0;
+    g.solaire.xc[1] = 1.0;
+    g.solaire.yc[0] = 0.0;
+    g.solaire.yc[1] = 1.0;
+
+
+
+    unsigned char *data2 = buildAlphaData(&img[2]);
+    // abyss
+    //unsigned char *data2 = new unsigned char[h * w * 4]; 
+    g.abyss.backImage = &img[2];
+    glGenTextures(1, &g.abyss.backTexture);
+    w = g.abyss.backImage->width;
+    h = g.abyss.backImage->height;
+    glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, data2);
+    g.abyss.xc[0] = 0.0;
+    g.abyss.xc[1] = 1.0;
+    g.abyss.yc[0] = 0.0;
+    g.abyss.yc[1] = 1.0;
+
 
 
 
@@ -326,39 +334,39 @@ void init() {
 
 void check_mouse(XEvent *e)
 {
-	//Did the mouse move?
-	//Was a mouse button clicked?
-	static int savex = 0;
-	static int savey = 0;
-	//
-	if (e->type == ButtonRelease) {
-		return;
-	}
-	if (e->type == ButtonPress) {
-		if (e->xbutton.button==1) {
-			//Left button is down
-		}
-		if (e->xbutton.button==3) {
-			//Right button is down
-		}
-	}
-	if (savex != e->xbutton.x || savey != e->xbutton.y) {
-		//Mouse moved
-		savex = e->xbutton.x;
-		savey = e->xbutton.y;
-	}
+    //Did the mouse move?
+    //Was a mouse button clicked?
+    static int savex = 0;
+    static int savey = 0;
+    //
+    if (e->type == ButtonRelease) {
+        return;
+    }
+    if (e->type == ButtonPress) {
+        if (e->xbutton.button==1) {
+            //Left button is down
+        }
+        if (e->xbutton.button==3) {
+            //Right button is down
+        }
+    }
+    if (savex != e->xbutton.x || savey != e->xbutton.y) {
+        //Mouse moved
+        savex = e->xbutton.x;
+        savey = e->xbutton.y;
+    }
 }
 
 int check_keys(XEvent *e)
 {
-	//Was there input from the keyboard?
-	if (e->type == KeyPress) {
-		int key = XLookupKeysym(&e->xkey, 0);
-		if (key == XK_Escape) {
-			return 1;
-		}
-	}
-	return 0;
+    //Was there input from the keyboard?
+    if (e->type == KeyPress) {
+        int key = XLookupKeysym(&e->xkey, 0);
+        if (key == XK_Escape) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 //Added Play Game - Nicklas Chiang
@@ -521,7 +529,7 @@ void display_menu() {
         r.bot = g.yres / 2;
         r.left = g.xres / 2;
         r.center = 1;
-        unsigned int color = 0x00000000;
+        unsigned int color = 0x00ff0000;
 
         ggprint13(&r, 45, 0x00ff0000, "EgoShadow");
         ggprint13(&r, 20, color, selectedOption == 0 ? "> Play Game" : "Play Game");
@@ -571,38 +579,46 @@ void display_menu() {
         usleep(1000);
     }
 }
-
+void display_startup() {
+    std::cout << "hi" << std::endl;
+}
 void background()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0, 1.0, 1.0);
     //draw bg
-	glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
-	glBegin(GL_QUADS);
-		glTexCoord2f(g.tex.xc[0], g.tex.yc[1]); glVertex2i(0, 0);
-		glTexCoord2f(g.tex.xc[0], g.tex.yc[0]); glVertex2i(0, g.yres);
-		glTexCoord2f(g.tex.xc[1], g.tex.yc[0]); glVertex2i(g.xres, g.yres);
-		glTexCoord2f(g.tex.xc[1], g.tex.yc[1]); glVertex2i(g.xres, 0);
-	glEnd();
-        //draw bobcat
-    glBindTexture(GL_TEXTURE_2D, g.bobcat.backTexture);
+    glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
     glBegin(GL_QUADS);
-        glTexCoord2f(g.bobcat.xc[0], g.bobcat.yc[1]); glVertex2i(0, 0);
-        glTexCoord2f(g.bobcat.xc[0], g.bobcat.yc[0]); glVertex2i(0, 100);
-        glTexCoord2f(g.bobcat.xc[1], g.bobcat.yc[0]); glVertex2i(100, 100);
-        glTexCoord2f(g.bobcat.xc[1], g.bobcat.yc[1]); glVertex2i(100, 0);
+    glTexCoord2f(g.tex.xc[0], g.tex.yc[1]); glVertex2i(0, 0);
+    glTexCoord2f(g.tex.xc[0], g.tex.yc[0]); glVertex2i(0, g.yres);
+    glTexCoord2f(g.tex.xc[1], g.tex.yc[0]); glVertex2i(g.xres, g.yres);
+    glTexCoord2f(g.tex.xc[1], g.tex.yc[1]); glVertex2i(g.xres, 0);
     glEnd();
-    // draw rabbit
-    glBindTexture(GL_TEXTURE_2D, g.rabbit.backTexture);
+    //draw solaire
+    glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.0f);
     glColor4ub(255,255,255,255);
-    glBindTexture(GL_TEXTURE_2D, g.rabbit.backTexture);
+    glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
+
     glBegin(GL_QUADS);
-        glTexCoord2f(g.rabbit.xc[0], g.rabbit.yc[1]); glVertex2i(100, 0);
-        glTexCoord2f(g.rabbit.xc[0], g.rabbit.yc[0]); glVertex2i(100, 100);
-        glTexCoord2f(g.rabbit.xc[1], g.rabbit.yc[0]); glVertex2i(200, 100);
-        glTexCoord2f(g.rabbit.xc[1], g.rabbit.yc[1]); glVertex2i(200, 0);
+    glTexCoord2f(g.solaire.xc[0], g.solaire.yc[1]); glVertex2i(g.xres - 200, 0);
+    glTexCoord2f(g.solaire.xc[0], g.solaire.yc[0]); glVertex2i(g.xres - 200, 200);
+    glTexCoord2f(g.solaire.xc[1], g.solaire.yc[0]); glVertex2i(g.xres, 200);
+    glTexCoord2f(g.solaire.xc[1], g.solaire.yc[1]); glVertex2i(g.xres, 0);
+    glEnd();
+    glDisable(GL_ALPHA_TEST);
+    // draw abyss
+    glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+    glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
+    glBegin(GL_QUADS);
+    glTexCoord2f(g.abyss.xc[0], g.abyss.yc[1]); glVertex2i(0, 0);
+    glTexCoord2f(g.abyss.xc[0], g.abyss.yc[0]); glVertex2i(0, 200);
+    glTexCoord2f(g.abyss.xc[1], g.abyss.yc[0]); glVertex2i(200, 200);
+    glTexCoord2f(g.abyss.xc[1], g.abyss.yc[1]); glVertex2i(200, 0);
     glEnd();
     glDisable(GL_ALPHA_TEST);
 }
@@ -610,8 +626,8 @@ void background()
 void move_background()
 {
     //move the background
-	g.tex.xc[0] += 0.001;
-	g.tex.xc[1] += 0.001;
+    g.tex.xc[0] += 0.001;
+    g.tex.xc[1] += 0.001;
 }
 
 void physics()
@@ -621,7 +637,7 @@ void physics()
 void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
+    glColor3f(1.0, 1.0, 1.0);
 }
 
 

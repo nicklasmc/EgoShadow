@@ -1,8 +1,6 @@
 # EgoShadow
-Role-Playing Game based on the acclaimed JRPG series Persona, by Atlus.
+RPG Game based on the JRPG series Persona, developed using OpenGL.
 
-This game is being developed using OpenGL on the University's private server.
-
-The game features a single battle sequence due to time constraints of the project deadlines.
+Game represents a single battle sequence due to time constraints of the project.
 
 
