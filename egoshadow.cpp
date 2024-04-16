@@ -114,9 +114,9 @@ class Texture {
 class Character {
 private:
 public:
-    //Character Constructor
+    // Character Constructor
     Character(std::string _name, int _hp, int _max_hp, int _sp, int _max_sp, std::string _weaknesses, std::string _resistances)
-    : name(_name), hp(_hp), max_hp(_max_hp), sp(_sp), max_sp(_max_sp), weakness(_weaknesses), resistance(_resistances) {}
+    : name(_name), hp(_hp), max_hp(_max_hp), sp(_sp), max_sp(_max_sp), weakness(_weaknesses), resistance(_resistances), isDowned(false) {}
 
     int hp;
     int sp; // Spell points
@@ -125,180 +125,284 @@ public:
     std::string name;
     std::string weakness;
     std::string resistance;
+    bool isDowned;
 
     // Member function to reduce character's HP
     void takeDamage(int damage) {
         hp -= damage;
-        if (hp < 0) {
+        if (hp <= 0) {
             hp = 0;  // Ensure HP doesn't go below zero
+            isDowned = true; // Set isDowned to true if HP hits zero
         }
     }
 
     void healDamage(int heal) {
-        if (hp >= max_hp){
-            std::cout << "Cannot heal target. Target is not damaged! \n\n";
+        if (!isDowned) { // Check if the character is not downed
+            int potential_hp = hp + heal;
+            if (potential_hp > max_hp) {
+                potential_hp = max_hp; // Cap healing at max_hp
+                std::cout << "Healed " << (max_hp - hp) << " HP.\n";
+                hp = potential_hp;
+            } else {
+                std::cout << "Healed " << heal << " HP.\n";
+                hp = potential_hp;
+            }
         } else {
-            hp += heal;
+            std::cout << name << " is downed and cannot be healed.\n";
         }
     }
 
     // Member function to reduce character's SP
     void reduceSP(int spellCost) {
         sp -= spellCost;
+        std::cout << "Cost " << spellCost << " SP.\n\n";
         if (sp < 0) {
             sp = 0;  // Ensure SP doesn't go below zero
         }
     }
 
-    // Member function to reduce character's SP
+    // Member function to heal character's SP
     void healSP(int healSP) {
-        if (sp >= max_sp) {
-            std::cout << "Cannot refresh SP. Target is full of energy! \n\n";
+        int potential_sp = sp + healSP;
+        if (potential_sp > max_sp) {
+            potential_sp = max_sp; // Cap healing at max_sp
+            std::cout << "Restored " << (max_sp - sp) << " SP.\n";
+            sp = potential_sp;
         } else {
-            sp += healSP;
+            std::cout << "Restored " << healSP << " SP.\n";
+            sp = potential_sp;
         }
     }
 
+    // Member function to check if the character is downed
+    bool isCharacterDowned() {
+        return isDowned;
+    }
 
     //------------------------------------------------------ ALL SKILLS
 
     // Member function to perform a physical attack
-    void physicalAttack(Character& target) {
-        // Generate random damage between 21-25
-        int damage = rand() % 5 + 21;
-        // Apply the damage to the target
-        target.takeDamage(damage);
+    void bash(Character& target) {
+        // Check if the target is downed
+        if (!target.isCharacterDowned()) {
+            // Generate random damage between 21-25
+            int damage = rand() % 5 + 21;
+            // Apply the damage to the target
+            std::cout << target.name << " takes " << damage << " damage \n";
+            target.takeDamage(damage);
+        } else {
+            std::cout << target.name << " is already downed and cannot be attacked!\n";
+        }
     }
 
-    void agilao(Character& caster, Character& target) {
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts agilao!\n\n";
-            int damage = rand() % 5 + 21;
-            // Check if the target is weak to fire
-            if (target.weakness == "fire") {
-                // If the target is weak to fire, increase damage
-                damage *= 2;
-                std::cout << target.name << " is weak! \n\n";
-            } else if (target.resistance == "fire"){
-                // If the target is resistant to fire, decrease damage
-                damage /= 2;
-                std::cout << target.name << " resists! \n\n";
+    void solar(Character& caster, Character& target) {
+        if (!target.isCharacterDowned()) {
+            if (caster.sp >= 10) {
+                std::cout << caster.name << " casts solar!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "fire") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "fire"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+                caster.reduceSP(10);
+            } else {
+                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
             }
-            target.takeDamage(damage);
+        }
+        else {
+            std::cout << target.name << " is downed and cannot take damage!\n\n";
+        }
+    }
+
+    void tornado(Character& caster, Character& target) {
+        if (!target.isCharacterDowned()) {
+            if (caster.sp >= 10) {
+                std::cout << caster.name << " casts tornado!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "wind") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "wind"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+                caster.reduceSP(10);
+            } else {
+                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+            }
+        }
+        else {
+            std::cout << target.name << " is downed and cannot take damage!\n\n";
+        }
+    }
+
+    void thunder(Character& caster, Character& target) {
+        if (!target.isCharacterDowned()) {
+            if (caster.sp >= 10) {
+                std::cout << caster.name << " casts thunder!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "electric") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "electric"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+                caster.reduceSP(10);
+            } else {
+                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+            }
+        }
+        else {
+            std::cout << target.name << " is downed and cannot take damage!\n\n";
+        }
+    }
+
+    void blizzard(Character& caster, Character& target) {
+        if (!target.isCharacterDowned()) {
+            if (caster.sp >= 10) {
+                std::cout << caster.name << " casts blizzard!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "ice") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "ice"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+                caster.reduceSP(10);
+            } else {
+                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+            }
+        }
+        else {
+            std::cout << target.name << " is downed and cannot take damage!\n\n";
+        }
+    }
+
+    void cure(Character& caster, Character& target) {
+        if (!target.isCharacterDowned()) {
+            if (target.hp < target.max_hp) {
+                if (caster.sp >= 10) {
+                    std::cout << caster.name << " casts cure!\n";
+                    int heal = rand() % 5 + 21;
+                    std::cout << target.name << " restores " << heal << " health\n";
+                    target.healDamage(heal);
+                    caster.reduceSP(10);
+                } else {
+                    std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                }
+            } else {
+                std::cout << target.name << " is already at full health!\n\n";
+            }
+        }
+        else {
+            std::cout << target.name << " is downed and cannot regain health!\n\n";
+        }
+    }
+
+    // Heal all party members
+    void cureAll(Character& caster, Character characters[]) {
+        bool anyDamaged = false; // Flag to track if any character is damaged
+        for (int i = 0; i < 4; ++i) {
+            if (characters[i].hp < characters[i].max_hp && !characters[i].isDowned) {
+                anyDamaged = true;
+                break; // If any character is damaged and not downed, no need to check further
+            }
+        }
+
+        if (!anyDamaged) {
+            std::cout << "All party members are either at full health or downed!\n\n";
+            return; // Exit the function early if all damaged characters are downed or at full health
+        }
+
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts cure all!\n";
+            srand(time(NULL));
+            for (int i = 0; i < 4; ++i) {
+                if (characters[i].hp < characters[i].max_hp && !characters[i].isDowned) {
+                    int heal = rand() % 5 + 21;
+                    characters[i].healDamage(heal);
+                    std::cout << characters[i].name << " restores " << heal << " health\n";
+                }
+            }
             caster.reduceSP(10);
         } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
         }
     }
 
-    void garula(Character& caster, Character& target) {
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts garula!\n\n";
-            int damage = rand() % 5 + 21;
-            // Check if the target is weak to fire
-            if (target.weakness == "wind") {
-                // If the target is weak to fire, increase damage
-                damage *= 2;
-                std::cout << target.name << " is weak! \n\n";
-            } else if (target.resistance == "wind"){
-                // If the target is resistant to fire, decrease damage
-                damage /= 2;
-                std::cout << target.name << " resists! \n\n";
+    void spDrop(Character& caster, Character& target) {
+        if (!target.isCharacterDowned()) {
+            if (target.sp < target.max_sp) {
+                if (caster.sp >= 10) {
+                    std::cout << caster.name << " uses an SP Drop!\n";
+                    int healSP = rand() % 5 + 21;
+                    std::cout << target.name << " restores " << healSP << " SP\n";
+                    target.healSP(healSP);
+                } else {
+                    std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                }
+            } else {
+                std::cout << target.name << " is already at full SP!\n\n";
             }
-            target.takeDamage(damage);
+        }
+        else {
+            std::cout << target.name << " is downed and cannot regain SP!\n\n";
+        }
+    }
+
+    void almighty(Character& caster, Character characters[]) {
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts almighty!\n";
+            srand(time(NULL));
+            for (int i = 0; i < 4; ++i) {
+                if (!characters[i].isDowned) {
+                    int damage = rand() % 5 + 21;
+                    characters[i].takeDamage(damage);
+                    std::cout << characters[i].name << " takes " << damage << " damage \n";
+                } else {
+                    std::cout << characters[i].name << " is downed and cannot take damage!\n";
+                }
+            }
             caster.reduceSP(10);
         } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
         }
     }
 
-    void zionga(Character& caster, Character& target) {
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts zionga!\n\n";
-            int damage = rand() % 5 + 21;
-            // Check if the target is weak to fire
-            if (target.weakness == "electric") {
-                // If the target is weak to fire, increase damage
-                damage *= 2;
-                std::cout << target.name << " is weak! \n\n";
-            } else if (target.resistance == "electric"){
-                // If the target is resistant to fire, decrease damage
-                damage /= 2;
-                std::cout << target.name << " resists! \n\n";
-            }
-            target.takeDamage(damage);
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-        }
-    }
-
-    void bufula(Character& caster, Character& target) {
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts bufula!\n\n";
-            int damage = rand() % 5 + 21;
-            // Check if the target is weak to fire
-            if (target.weakness == "ice") {
-                // If the target is weak to fire, increase damage
-                damage *= 2;
-                std::cout << target.name << " is weak! \n\n";
-            } else if (target.resistance == "ice"){
-                // If the target is resistant to fire, decrease damage
-                damage /= 2;
-                std::cout << target.name << " resists! \n\n";
-            }
-            target.takeDamage(damage);
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-        }
-    }
-
-    void diarama(Character& caster, Character& target) {
-        if ((caster.sp >= 10)) {
-            std::cout << caster.name << " casts Diarama!\n\n";
-            int heal = rand() % 5 + 21;
+    void revive(Character& caster, Character& target) {
+        if (target.isDowned) {
+            std::cout << caster.name << " casts revive on " << target.name << "!\n";
+            target.isDowned = false; // Revive the target by setting isDowned to false
+            int heal = target.max_hp / 2; // Heal the target to half of their max HP
+            std::cout << target.name << " has been revived!" << "!\n\n";
             target.healDamage(heal);
-            caster.reduceSP(10);
         } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-        }
-    }
-
-    void mediarama(Character& caster, Character characters[]) {
-        if ((caster.sp >= 10)) {
-            std::cout << caster.name << " casts mediarama!\n\n";
-            int heal = rand() % 5 + 21;
-            for (int i = 0; i < 4; ++i) {
-                characters[i].healDamage(heal);
-            }
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-        }
-    }
-
-    void soulDrop(Character& caster, Character& target) {
-        if ((caster.sp >= 10)) {
-            std::cout << caster.name << " uses a Soul Drop!\n\n";
-            int healSP = rand() % 5 + 21;
-            target.healSP(healSP);
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-        }
-    }
-
-    void megidolaon(Character& caster, Character characters[]) {
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts Megidolaon!\n\n";
-            int damage = rand() % 5 + 21;
-            for (int i = 0; i < 4; ++i) {
-                characters[i].takeDamage(damage);
-            }
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+            std::cout << target.name <<" is not incapacitated!\n";
         }
     }
 
@@ -618,25 +722,31 @@ int check_keys(XEvent *e)
         int key = XLookupKeysym(&e->xkey, 0);
         switch (key) {
             case XK_1:
-                g.characters[0].agilao(g.characters[2], g.characters[3]);
+                g.characters[0].solar(g.characters[2], g.characters[3]);
                 break;
             case XK_2:
-                g.characters[0].zionga(g.characters[3], g.characters[1]);
+                g.characters[0].thunder(g.characters[3], g.characters[1]);
                 break;
             case XK_3:
-                g.characters[0].garula(g.characters[1], g.characters[2]);
+                g.characters[0].tornado(g.characters[1], g.characters[2]);
                 break;
             case XK_4:
-                g.characters[0].bufula(g.characters[0], g.characters[0]);
+                g.characters[0].blizzard(g.characters[0], g.characters[0]);
                 break;
             case XK_5:
-                g.characters[0].diarama(g.characters[0], g.characters[0]);
+                g.characters[0].cure(g.characters[0], g.characters[0]);
                 break;
             case XK_6:
-                g.characters[0].mediarama(g.characters[0], g.characters);
+                g.characters[0].cureAll(g.characters[0], g.characters);
                 break;
             case XK_7:
-                g.boss[0].megidolaon(g.boss[0], g.characters);
+                g.characters[0].spDrop(g.characters[0], g.characters[0]);
+                break;
+            case XK_8:
+                g.characters[0].revive(g.characters[0], g.characters[3]);
+                break;
+            case XK_9:
+                g.boss[0].almighty(g.boss[0], g.characters);
                 break;
             case XK_Escape:
             return 1;
@@ -734,7 +844,7 @@ void display_hp()
 {
 
     Rect r;
-    unsigned int c = 0x00008b;
+    unsigned int c = 0xFFFFFF;
 
     // Set the position for displaying HP in the top right corner
     r.bot = g.yres - 20;
@@ -1091,19 +1201,23 @@ void render()
     r.left = 20;
     r.center = 0;
 
-    ggprint8b(&r, 16, 0x00008b, "press 1 to make Junpei cast fire on Aki");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 1 to make Junpei cast fire on Aki");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0x00008b, "press 2 to make Aki cast electric on Yukari");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 2 to make Aki cast electric on Yukari");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0x00008b, "press 3 to make Yukari cast wind on Junpei");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 3 to make Yukari cast wind on Junpei");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0x00008b, "press 4 to make Makoto cast ice on Makoto");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 4 to make Makoto cast ice on Makoto");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0x00008b, "press 5 to make Makoto cast heal himself");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 5 to make Makoto cast heal himself");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0x00008b, "press 6 to make Makoto heal the party");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 6 to make Makoto heal the party");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0x00008b, "press 7 to make Nyx cast almighty on party");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 7 to make Makoto restore SP to Makoto");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0xFFFFFF, "press 8 to make Makoto revive Akihiko");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0xFFFFFF, "press 9 to make Nyx cast almighty on party");
 
 }
 
