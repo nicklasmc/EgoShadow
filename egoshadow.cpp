@@ -52,6 +52,8 @@ const int AKIHIKO_SP = 127;
 //char data[1000][4]  aaa bbb ccc ddd eee fff
 //
 //
+//
+//
 class Image {
     public:
         int width, height;
@@ -99,7 +101,7 @@ class Image {
             unlink(ppmname);
         }
 };
-Image img[3] = {"ds.jpg", "solaire.png", "abyss.png"};
+Image img[4] = {"fog.jpg", "solaire.png", "abyss.png", "ds.jpg"};
 
 class Texture {
     public:
@@ -305,11 +307,13 @@ public:
 
 class Global {
     public:
+        bool introDone;
         int xres, yres;
         int show_credits;
         Texture tex;
         Texture solaire;
         Texture abyss;
+        Texture city;
         
         Character characters[4] = {
             Character("Makoto", MAKOTO_HP, MAKOTO_HP, MAKOTO_SP, MAKOTO_SP, "ice", "fire"),
@@ -324,9 +328,10 @@ class Global {
 
 
         Global() {
-            xres=1024, yres=1024;
+            //xres=1024, yres=1024;
+            xres=2040, yres=2040;
             show_credits = 0;
-        }
+                    }
 } g;
 
 class X11_wrapper {
@@ -383,7 +388,7 @@ class X11_wrapper {
         void set_title() {
             //Set the window title bar.
             XMapWindow(dpy, win);
-            XStoreName(dpy, win, "scrolling background (seamless)");
+            XStoreName(dpy, win, "4490 Game Dev");
         }
         bool getXPending() {
             return XPending(dpy);
@@ -412,6 +417,7 @@ class X11_wrapper {
 void init_opengl(void);
 void check_mouse(XEvent *e);
 int check_keys(XEvent *e);
+void check_keys_intro(XEvent *e);
 void physics(void);
 void render(void);
 void play_game();
@@ -419,6 +425,7 @@ void init();
 void background();
 void move_background();
 void display_credits();
+void display_battleMenu();
 void display_game_over();
 void display_options();
 void return_to_menu();
@@ -554,10 +561,29 @@ void init_opengl(void)
     g.abyss.yc[0] = 0.0;
     g.abyss.yc[1] = 1.0;
 
+    // city
+    g.city.backImage = &img[3];
+    glGenTextures(1, &g.city.backTexture);
+    w = g.city.backImage->width;
+    h = g.city.backImage->height;
+    glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, g.city.backImage->data);
+    g.city.xc[0] = 0.0;
+    g.city.xc[1] = 1.0;
+    g.city.yc[0] = 0.0;
+    g.city.yc[1] = 1.0;
+
+
+
+
 
 }
 
 void init() {
+
 }
 
 void check_mouse(XEvent *e)
@@ -613,8 +639,7 @@ int check_keys(XEvent *e)
                 g.boss[0].megidolaon(g.boss[0], g.characters);
                 break;
             case XK_Escape:
-                return 1;
-                break;
+            return 1;
         }
     }
     return 0;
@@ -809,10 +834,118 @@ void return_to_menu()
     display_menu(); // Return to the menu after options
 }
 
+// |
+void display_battleMenu() {
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // glColor3f(1.0, 1.0, 1.0);
+    // ----- Red Box ----- //
+    // draw in counter-clockwise order
+    // botleft -> botright -> topright -> topleft
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // main container border
+    glColor4f(1.0, 0.0, 0.0, 1.0); // red
+    glBegin(GL_QUADS); 
+    glVertex2i(0, g.yres/4); // topleft: (x,y)
+    glVertex2i(g.xres, g.yres/4); // topright: (x,y)
+    glVertex2i(g.xres, 0); // botright: (x,y)
+    glVertex2i(0, 0); // botleft: (x,y)
+    glEnd();
+    // main container inner
+    //  255, 87, 51 
+    //glColor3ub(255,87,51);
+    glColor3ub(255,255,255);
+    glBegin(GL_QUADS); 
+    glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
+    glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
+    glVertex2i(g.xres - 10, 10); // botright: (x,y)
+    glVertex2i(10,10); // botleft: (x,y)
+    glEnd();
+
+
+
+    // glXSwapBuffers(x11.dpy, x11.win);
+    // usleep(1000);
+    // std::cout << "Battle Menu init" << std::endl;
+}
+
 //Function to Display Main Menu
 void display_menu() {
     int selectedOption = 0; // Track the selected option
     bool menuActive = true; // Control variable for the menu loop
+    float alpha = 0.0;
+    float introDuration = 5.0;
+    float fadeRate = (1 / introDuration);
+    // ---------------------------------Intro --------------------------------
+    // Timers
+    time_t startTime;
+    time_t now;
+    float elapsedTime = 0;
+    int boxWidth = g.xres/2;
+    int centerY = g.yres/2;
+    int centerX = g.xres/2;
+    int boxHeight = g.yres/3;
+    time(&startTime);
+    // for the square
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0, 0, 0, 1);
+    if (!g.introDone) {
+        while (elapsedTime < introDuration) {
+            now = time(NULL);
+            elapsedTime = difftime(now, startTime);
+
+            glClear(GL_COLOR_BUFFER_BIT); // clear screen
+            glClearColor(fadeRate, fadeRate, fadeRate, 1); 
+
+            // ----- Text ----- //
+            Rect r;
+            r.bot = g.xres / 2;
+            r.left = g.xres / 2;
+            r.center = 1;
+            ggprint16(&r, 20, 0x00ff0011, "EgoShadow");
+            glPopMatrix();
+
+            // ----- Red Box ----- //
+            // draw in counter-clockwise order
+            // botleft -> botright -> topright -> topleft
+            glColor4f(1.0, 0.0, 0.0, alpha); // red
+            glBegin(GL_QUADS); 
+            glVertex2i(centerX - boxWidth/2, centerY + boxHeight/2 - 5); // topleft: (x,y)
+            glVertex2i(centerX + boxWidth/2, centerY + boxHeight/2 - 5); // topright: (x,y)
+            glVertex2i(centerX + boxWidth/2, centerY - boxHeight/2 - 5); // botright: (x,y) 
+            glVertex2i(centerX - boxWidth/2, centerY - boxHeight/2 - 5); // botleft:  (x,y) -> center - width/2 
+            glEnd();
+
+            // ----- Texture on box ----- //
+            glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
+            glBegin(GL_QUADS);
+            // 0,0 = top left
+            // 1,1 = bottom right
+            glTexCoord2f(0.0, 0.0); glVertex2i(centerX - boxWidth/2, centerY + boxHeight/2 - 5);
+            glTexCoord2f(1.0, 0.0); glVertex2i(centerX + boxWidth/2, centerY + boxHeight/2 - 5);
+            glTexCoord2f(1.0, 1.0); glVertex2i(centerX + boxWidth/2, centerY - boxHeight/2 - 5);
+            glTexCoord2f(0.0, 1.0); glVertex2i(centerX - boxWidth/2, centerY - boxHeight/2 - 5);
+            glEnd();
+
+            // draw white boxes to reveal logo
+// ------------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------
+
+
+
+            alpha += .025;      
+            fadeRate -=  .003;      
+            glXSwapBuffers(x11.dpy, x11.win);
+            usleep(1000); 
+        }
+        g.introDone = 1;
+    }
+    // ---------------------------------Intro --------------------------------
+    glDisable(GL_BLEND);
 
     while (menuActive) {
         // Clear the screen
@@ -891,6 +1024,17 @@ void background()
     glTexCoord2f(g.tex.xc[1], g.tex.yc[0]); glVertex2i(g.xres, g.yres);
     glTexCoord2f(g.tex.xc[1], g.tex.yc[1]); glVertex2i(g.xres, 0);
     glEnd();
+    glDisable(GL_ALPHA_TEST);
+    // draw city
+    /*
+       glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
+       glBegin(GL_QUADS);
+       glTexCoord2f(g.city.xc[0], g.city.yc[1]); glVertex2i(0, 0);
+       glTexCoord2f(g.city.xc[0], g.city.yc[0]); glVertex2i(0, 100);
+       glTexCoord2f(g.city.xc[1], g.city.yc[0]); glVertex2i(100, 100);
+       glTexCoord2f(g.city.xc[1], g.city.yc[1]); glVertex2i(100, 0);
+       glEnd();
+
     //draw solaire
     glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
     glEnable(GL_ALPHA_TEST);
@@ -918,6 +1062,7 @@ void background()
     glTexCoord2f(g.abyss.xc[1], g.abyss.yc[1]); glVertex2i(200, 0);
     glEnd();
     glDisable(GL_ALPHA_TEST);
+    */
 }
 
 void move_background()
@@ -935,7 +1080,8 @@ void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0, 1.0, 1.0);
-    
+
+    display_battleMenu();
     display_hp();
 
     Rect r;
@@ -958,6 +1104,7 @@ void render()
     ggprint8b(&r, 16, 0x00008b, "press 6 to make Makoto heal the party");
     r.bot -= 20;
     ggprint8b(&r, 16, 0x00008b, "press 7 to make Nyx cast almighty on party");
+
 }
 
 
