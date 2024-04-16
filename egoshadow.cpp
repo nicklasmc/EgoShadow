@@ -19,8 +19,26 @@
 #include <GL/glx.h>
 #include "fonts.h"
 #include <iostream>
+#include <string>
 #include <chrono>
+#include <cstdlib>
+#include <ctime>
+
+
 #define ALPHA 1;
+
+// Define constants for maximum HP values
+const int MAX_BOSS_HP = 1000;
+const int MAX_BOSS_SP = 100;
+
+const int MAKOTO_HP = 159;
+const int MAKOTO_SP = 101;
+const int YUKARI_HP = 139;
+const int YUKARI_SP = 105;
+const int JUNPEI_HP = 171;
+const int JUNPEI_SP = 95;
+const int AKIHIKO_HP = 205;
+const int AKIHIKO_SP = 127;
 
 //24-bit color:  8 + 8 + 8 = 24
 //               R   G   B
@@ -91,6 +109,200 @@ class Texture {
         float yc[2];
 };
 
+class Character {
+private:
+public:
+    //Character Constructor
+    Character(std::string _name, int _hp, int _max_hp, int _sp, int _max_sp, std::string _weaknesses, std::string _resistances)
+    : name(_name), hp(_hp), max_hp(_max_hp), sp(_sp), max_sp(_max_sp), weakness(_weaknesses), resistance(_resistances) {}
+
+    int hp;
+    int sp; // Spell points
+    int max_hp;
+    int max_sp;
+    std::string name;
+    std::string weakness;
+    std::string resistance;
+
+    // Member function to reduce character's HP
+    void takeDamage(int damage) {
+        hp -= damage;
+        if (hp < 0) {
+            hp = 0;  // Ensure HP doesn't go below zero
+        }
+    }
+
+    void healDamage(int heal) {
+        if (hp >= max_hp){
+            std::cout << "Cannot heal target. Target is not damaged! \n\n";
+        } else {
+            hp += heal;
+        }
+    }
+
+    // Member function to reduce character's SP
+    void reduceSP(int spellCost) {
+        sp -= spellCost;
+        if (sp < 0) {
+            sp = 0;  // Ensure SP doesn't go below zero
+        }
+    }
+
+    // Member function to reduce character's SP
+    void healSP(int healSP) {
+        if (sp >= max_sp) {
+            std::cout << "Cannot refresh SP. Target is full of energy! \n\n";
+        } else {
+            sp += healSP;
+        }
+    }
+
+
+    //------------------------------------------------------ ALL SKILLS
+
+    // Member function to perform a physical attack
+    void physicalAttack(Character& target) {
+        // Generate random damage between 21-25
+        int damage = rand() % 5 + 21;
+        // Apply the damage to the target
+        target.takeDamage(damage);
+    }
+
+    void agilao(Character& caster, Character& target) {
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts agilao!\n\n";
+            int damage = rand() % 5 + 21;
+            // Check if the target is weak to fire
+            if (target.weakness == "fire") {
+                // If the target is weak to fire, increase damage
+                damage *= 2;
+                std::cout << target.name << " is weak! \n\n";
+            } else if (target.resistance == "fire"){
+                // If the target is resistant to fire, decrease damage
+                damage /= 2;
+                std::cout << target.name << " resists! \n\n";
+            }
+            target.takeDamage(damage);
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void garula(Character& caster, Character& target) {
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts garula!\n\n";
+            int damage = rand() % 5 + 21;
+            // Check if the target is weak to fire
+            if (target.weakness == "wind") {
+                // If the target is weak to fire, increase damage
+                damage *= 2;
+                std::cout << target.name << " is weak! \n\n";
+            } else if (target.resistance == "wind"){
+                // If the target is resistant to fire, decrease damage
+                damage /= 2;
+                std::cout << target.name << " resists! \n\n";
+            }
+            target.takeDamage(damage);
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void zionga(Character& caster, Character& target) {
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts zionga!\n\n";
+            int damage = rand() % 5 + 21;
+            // Check if the target is weak to fire
+            if (target.weakness == "electric") {
+                // If the target is weak to fire, increase damage
+                damage *= 2;
+                std::cout << target.name << " is weak! \n\n";
+            } else if (target.resistance == "electric"){
+                // If the target is resistant to fire, decrease damage
+                damage /= 2;
+                std::cout << target.name << " resists! \n\n";
+            }
+            target.takeDamage(damage);
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void bufula(Character& caster, Character& target) {
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts bufula!\n\n";
+            int damage = rand() % 5 + 21;
+            // Check if the target is weak to fire
+            if (target.weakness == "ice") {
+                // If the target is weak to fire, increase damage
+                damage *= 2;
+                std::cout << target.name << " is weak! \n\n";
+            } else if (target.resistance == "ice"){
+                // If the target is resistant to fire, decrease damage
+                damage /= 2;
+                std::cout << target.name << " resists! \n\n";
+            }
+            target.takeDamage(damage);
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void diarama(Character& caster, Character& target) {
+        if ((caster.sp >= 10)) {
+            std::cout << caster.name << " casts Diarama!\n\n";
+            int heal = rand() % 5 + 21;
+            target.healDamage(heal);
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void mediarama(Character& caster, Character characters[]) {
+        if ((caster.sp >= 10)) {
+            std::cout << caster.name << " casts mediarama!\n\n";
+            int heal = rand() % 5 + 21;
+            for (int i = 0; i < 4; ++i) {
+                characters[i].healDamage(heal);
+            }
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void soulDrop(Character& caster, Character& target) {
+        if ((caster.sp >= 10)) {
+            std::cout << caster.name << " uses a Soul Drop!\n\n";
+            int healSP = rand() % 5 + 21;
+            target.healSP(healSP);
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+    void megidolaon(Character& caster, Character characters[]) {
+        if (caster.sp >= 10) {
+            std::cout << caster.name << " casts Megidolaon!\n\n";
+            int damage = rand() % 5 + 21;
+            for (int i = 0; i < 4; ++i) {
+                characters[i].takeDamage(damage);
+            }
+            caster.reduceSP(10);
+        } else {
+            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+    }
+
+};
+
+
 class Global {
     public:
         int xres, yres;
@@ -98,6 +310,19 @@ class Global {
         Texture tex;
         Texture solaire;
         Texture abyss;
+        
+        Character characters[4] = {
+            Character("Makoto", MAKOTO_HP, MAKOTO_HP, MAKOTO_SP, MAKOTO_SP, "ice", "fire"),
+            Character("Yukari", YUKARI_HP, YUKARI_HP, YUKARI_SP, YUKARI_SP, "electric", "wind"),
+            Character("Junpei", JUNPEI_HP, JUNPEI_HP, JUNPEI_SP, JUNPEI_SP, "wind", "fire"),
+            Character("Akihiko", AKIHIKO_HP, AKIHIKO_HP, AKIHIKO_SP, AKIHIKO_SP, "fire", "electric")
+        };
+
+        Character boss[1] = {
+            Character("Nyx", MAX_BOSS_HP, MAX_BOSS_HP, MAX_BOSS_SP, MAX_BOSS_SP, "none", "none")
+        };
+
+
         Global() {
             xres=1024, yres=1024;
             show_credits = 0;
@@ -199,6 +424,7 @@ void display_options();
 void return_to_menu();
 void display_menu();
 void display_startup();
+void display_hp();
 
 //===========================================================================
 //===========================================================================
@@ -206,6 +432,12 @@ int main()
 {
     init_opengl();
     display_startup();
+    // Access and manipulate individual characters
+    for (int i = 0; i < 4; ++i) {
+        std::cout << "Character " << i + 1 << " name: " << g.characters[i].name << std::endl;
+        std::cout << "Character " << i + 1 << " HP: " << g.characters[i].hp << std::endl;
+        std::cout << std::endl;
+    }
 
     display_menu();
 
@@ -323,13 +555,9 @@ void init_opengl(void)
     g.abyss.yc[1] = 1.0;
 
 
-
-
-
 }
 
 void init() {
-
 }
 
 void check_mouse(XEvent *e)
@@ -362,8 +590,31 @@ int check_keys(XEvent *e)
     //Was there input from the keyboard?
     if (e->type == KeyPress) {
         int key = XLookupKeysym(&e->xkey, 0);
-        if (key == XK_Escape) {
-            return 1;
+        switch (key) {
+            case XK_1:
+                g.characters[0].agilao(g.characters[2], g.characters[3]);
+                break;
+            case XK_2:
+                g.characters[0].zionga(g.characters[3], g.characters[1]);
+                break;
+            case XK_3:
+                g.characters[0].garula(g.characters[1], g.characters[2]);
+                break;
+            case XK_4:
+                g.characters[0].bufula(g.characters[0], g.characters[0]);
+                break;
+            case XK_5:
+                g.characters[0].diarama(g.characters[0], g.characters[0]);
+                break;
+            case XK_6:
+                g.characters[0].mediarama(g.characters[0], g.characters);
+                break;
+            case XK_7:
+                g.boss[0].megidolaon(g.boss[0], g.characters);
+                break;
+            case XK_Escape:
+                return 1;
+                break;
         }
     }
     return 0;
@@ -451,6 +702,52 @@ void display_game_over() {
     ggprint13(&r, 16, 0x00ffffff, "Press 'R' to restart");
 
     glDisable(GL_BLEND);
+}
+
+//Function to display hp for characters array
+void display_hp()
+{
+
+    Rect r;
+    unsigned int c = 0x00008b;
+
+    // Set the position for displaying HP in the top right corner
+    r.bot = g.yres - 20;
+    r.left = g.xres - 150;
+    r.center = 0;
+    // Display HP and SP for each character in the global array
+    for (int i = 0; i < 4; ++i) {
+        int current_hp = g.characters[i].hp;
+        int current_sp = g.characters[i].sp;
+        int max_hp = g.characters[i].max_hp;
+        // Calculate the percentage of health remaining
+        if (current_hp == 0) {
+            // If HP is zero, display "down" instead of percentage
+            ggprint8b(&r, 16, c, "%s HP: Downed", g.characters[i].name.c_str());
+        } else {
+            // Calculate the percentage of health remaining
+            int percentage = (int)(((float)current_hp / max_hp) * 100);
+            // Display HP using ggprint8b function
+            ggprint8b(&r, 16, c, "%s HP: %d/%d (%d%%)", g.characters[i].name.c_str(), current_hp, max_hp, percentage);
+        }
+        r.bot -= 20;
+        // Display SP
+        ggprint8b(&r, 16, c, "%s SP: %d/%d", g.characters[i].name.c_str(), current_sp, g.characters[i].max_sp);
+        // Move to next line
+        r.bot -= 20;
+    }
+
+    // Display HP and SP for the enemy character in the global array
+
+    if (g.boss[0].hp == 0) {
+        ggprint8b(&r, 16, 0xFF0000, "%s HP: Downed", g.boss[0].name.c_str());
+    } else {
+        int bossPercentage = (int)(((float)g.boss[0].hp / g.boss[0].max_hp) * 100);
+        ggprint8b(&r, 16, 0xFF0000, "%s HP: %d/%d (%d%%)", g.boss[0].name.c_str(), g.boss[0].hp, g.boss[0].max_hp, bossPercentage);
+    }
+    r.bot -= 20;
+    // Display SP
+    ggprint8b(&r, 16, 0xFF0000, "%s SP: %d/%d", g.boss[0].name.c_str(), g.boss[0].sp, g.boss[0].max_sp);
 }
 
 //Function to display options on screen
@@ -638,6 +935,29 @@ void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0, 1.0, 1.0);
+    
+    display_hp();
+
+    Rect r;
+
+    // Set the position for displaying HP in the top left corner
+    r.bot = g.yres - 20;
+    r.left = 20;
+    r.center = 0;
+
+    ggprint8b(&r, 16, 0x00008b, "press 1 to make Junpei cast fire on Aki");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0x00008b, "press 2 to make Aki cast electric on Yukari");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0x00008b, "press 3 to make Yukari cast wind on Junpei");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0x00008b, "press 4 to make Makoto cast ice on Makoto");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0x00008b, "press 5 to make Makoto cast heal himself");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0x00008b, "press 6 to make Makoto heal the party");
+    r.bot -= 20;
+    ggprint8b(&r, 16, 0x00008b, "press 7 to make Nyx cast almighty on party");
 }
 
 
