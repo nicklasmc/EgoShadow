@@ -25,9 +25,15 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
-//
+////
 
 #define ALPHA 1;
+#define LIGHT_BLUE 0x79d7fd;
+#define BLUE 0x00bbfa;
+#define NAVY 0x00183e;
+#define RED 0xe10000;
+#define BLACK 0x000000;
+#define WHITE 0xffffff;
 
 // Define constants for maximum HP values
 const int MAX_BOSS_HP = 1000;
@@ -103,7 +109,7 @@ class Image {
             unlink(ppmname);
         }
 };
-Image img[4] = {"fog.jpg", "solaire.png", "abyss.png", "ds.jpg"};
+Image img[4] = {"fixed_titlecard.png", "solaire.png", "abyss.png", "ds.jpg"};
 
 class Texture {
     public:
@@ -138,59 +144,59 @@ public:
     }
 
 
-    // Member function to reduce character's HP
-    void takeDamage(int damage) {
-        hp -= damage;
-        if (hp <= 0) {
-            hp = 0;  // Ensure HP doesn't go below zero
-            isDowned = true; // Set isDowned to true if HP hits zero
-        }
-    }
-
-    void healDamage(int heal) {
-        if (!isDowned) { // Check if the character is not downed
-            int potential_hp = hp + heal;
-            if (potential_hp > max_hp) {
-                potential_hp = max_hp; // Cap healing at max_hp
-                std::cout << "Healed " << (max_hp - hp) << " HP.\n";
-                hp = potential_hp;
-            } else {
-                std::cout << "Healed " << heal << " HP.\n";
-                hp = potential_hp;
+        // Member function to reduce character's HP
+        void takeDamage(int damage) {
+            hp -= damage;
+            if (hp <= 0) {
+                hp = 0;  // Ensure HP doesn't go below zero
+                isDowned = true; // Set isDowned to true if HP hits zero
             }
-        } else {
-            std::cout << name << " is downed and cannot be healed.\n";
         }
-    }
 
-    // Member function to reduce character's SP
-    void reduceSP(int spellCost) {
-        sp -= spellCost;
-        std::cout << "Cost " << spellCost << " SP.\n\n";
-        if (sp < 0) {
-            sp = 0;  // Ensure SP doesn't go below zero
+        void healDamage(int heal) {
+            if (!isDowned) { // Check if the character is not downed
+                int potential_hp = hp + heal;
+                if (potential_hp > max_hp) {
+                    potential_hp = max_hp; // Cap healing at max_hp
+                    std::cout << "Healed " << (max_hp - hp) << " HP.\n";
+                    hp = potential_hp;
+                } else {
+                    std::cout << "Healed " << heal << " HP.\n";
+                    hp = potential_hp;
+                }
+            } else {
+                std::cout << name << " is downed and cannot be healed.\n";
+            }
         }
-    }
 
-    // Member function to heal character's SP
-    void healSP(int healSP) {
-        int potential_sp = sp + healSP;
-        if (potential_sp > max_sp) {
-            potential_sp = max_sp; // Cap healing at max_sp
-            std::cout << "Restored " << (max_sp - sp) << " SP.\n";
-            sp = potential_sp;
-        } else {
-            std::cout << "Restored " << healSP << " SP.\n";
-            sp = potential_sp;
+        // Member function to reduce character's SP
+        void reduceSP(int spellCost) {
+            sp -= spellCost;
+            std::cout << "Cost " << spellCost << " SP.\n\n";
+            if (sp < 0) {
+                sp = 0;  // Ensure SP doesn't go below zero
+            }
         }
-    }
 
-    // Member function to check if the character is downed
-    bool isCharacterDowned() {
-        return isDowned;
-    }
+        // Member function to heal character's SP
+        void healSP(int healSP) {
+            int potential_sp = sp + healSP;
+            if (potential_sp > max_sp) {
+                potential_sp = max_sp; // Cap healing at max_sp
+                std::cout << "Restored " << (max_sp - sp) << " SP.\n";
+                sp = potential_sp;
+            } else {
+                std::cout << "Restored " << healSP << " SP.\n";
+                sp = potential_sp;
+            }
+        }
 
-    //------------------------------------------------------ ALL SKILLS
+        // Member function to check if the character is downed
+        bool isCharacterDowned() {
+            return isDowned;
+        }
+
+        //------------------------------------------------------ ALL SKILLS
 
     // Member function to perform a physical attack
     void bash(Character& caster, Character& target) {
@@ -439,6 +445,10 @@ public:
                 }
             }
 
+            if (!anyDamaged) {
+                std::cout << "All party members are either at full health or downed!\n\n";
+                return; // Exit the function early if all damaged characters are downed or at full health
+            }
             if (!anyDamaged) {
                 std::cout << "All party members are either at full health or downed!\n\n";
                 return; // Exit the function early if all damaged characters are downed or at full health
@@ -787,7 +797,7 @@ class Global {
         Texture solaire;
         Texture abyss;
         Texture city;
-        
+
         Character characters[4] = {
             Character("JOKER", JOKER_HP, JOKER_HP, JOKER_SP, JOKER_SP, "ice", "fire", Character::JOKER_ACTIONS),
             Character("MONA", MONA_HP, MONA_HP, MONA_SP, MONA_SP, "electric", "wind", Character::MONA_ACTIONS),
@@ -804,7 +814,7 @@ class Global {
             //xres=1024, yres=1024;
             xres=2040, yres=2040;
             show_credits = 0;
-                    }
+        }
 } g;
 
 class X11_wrapper {
@@ -983,22 +993,41 @@ void init_opengl(void)
     //
     //load the images file into a ppm structure.
     //
-    g.tex.backImage = &img[0];
+    // BACKGROUND GENERATION
     //create opengl texture elements
+    /*
+       g.tex.backImage = &img[0];
+       glGenTextures(1, &g.tex.backTexture);
+       int w = g.tex.backImage->width;
+       int h = g.tex.backImage->height;
+       glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
+       glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+       glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+       glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+       GL_RGB, GL_UNSIGNED_BYTE, g.tex.backImage->data);
+       g.tex.xc[0] = 0.0;
+       g.tex.xc[1] = 1.0;
+       g.tex.yc[0] = 0.0;
+       g.tex.yc[1] = 1.0;
+       */
+
+    /* -------- WORKING PNG VERSION -----------*/
+    unsigned char *data0 = buildAlphaData(&img[0]);
+    //unsigned char *data2 = new unsigned char[h * w * 4];
+    g.tex.backImage = &img[0];
     glGenTextures(1, &g.tex.backTexture);
     int w = g.tex.backImage->width;
     int h = g.tex.backImage->height;
     glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-            GL_RGB, GL_UNSIGNED_BYTE, g.tex.backImage->data);
-    g.tex.xc[0] = 0.0;
-    g.tex.xc[1] = 0.25;
-    g.tex.yc[0] = 0.0;
-    g.tex.yc[1] = 1.0;
-
-
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, data0);
+    //g.tex.xc[0] = 1.0;
+    //g.tex.xc[1] = 0.0;
+    //g.tex.yc[0] = 1.0;
+    //g.tex.yc[1] = 0.0;
+    /*-----------------------------------------*/
 
     unsigned char *data1 = buildAlphaData(&img[1]);
     //unsigned char *data2 = new unsigned char[h * w * 4];
@@ -1120,7 +1149,7 @@ int check_keys(XEvent *e)
             case XK_9:
                 break;
             case XK_Escape:
-            return 1;
+                return 1;
         }
     }
     return 0;
@@ -1327,7 +1356,7 @@ void display_battleMenu() {
     // botleft -> botright -> topright -> topleft
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+
     // main container border
     glColor4f(1.0, 0.0, 0.0, 1.0); // red
     glBegin(GL_QUADS); 
@@ -1415,9 +1444,9 @@ void display_menu() {
             glEnd();
 
             // draw white boxes to reveal logo
-// ------------------------------------------------------------------------------------------------------
+            // ------------------------------------------------------------------------------------------------------
 
-// ------------------------------------------------------------------------------------------------------
+            // ------------------------------------------------------------------------------------------------------
 
 
 
@@ -1433,17 +1462,17 @@ void display_menu() {
 
     while (menuActive) {
         // Clear the screen
-        glClear(GL_COLOR_BUFFER_BIT);
+        //glClear(GL_COLOR_BUFFER_BIT);
 
         background();
-        move_background();
+        //move_background();
 
         // Display menu options
         Rect r;
         r.bot = g.yres / 2;
         r.left = g.xres / 2;
         r.center = 1;
-        unsigned int color = 0x00ff0000;
+        unsigned int color = WHITE;
 
         ggprint13(&r, 45, 0x00ff0000, "EgoShadow");
         ggprint13(&r, 20, color, selectedOption == 0 ? "> Play Game" : "Play Game");
@@ -1498,54 +1527,29 @@ void display_startup() {
 }
 void background()
 {
+    glClearColor(1.0, 1.0, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0, 1.0, 1.0);
+
+    glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
+    glBegin(GL_QUADS);
+    // 0,0 = top left
+    // 1,1 = bottom right
+    glTexCoord2f(0.0, 0.0); glVertex2i(0,g.yres);
+    glTexCoord2f(1.0, 0.0); glVertex2i(g.xres, g.yres);
+    glTexCoord2f(1.0, 1.0); glVertex2i(g.xres, 0);
+    glTexCoord2f(0.0, 1.0); glVertex2i(0, 0);
+    glEnd();
+
+    /*
     //draw bg
     glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
     glBegin(GL_QUADS);
-    glTexCoord2f(g.tex.xc[0], g.tex.yc[1]); glVertex2i(0, 0);
-    glTexCoord2f(g.tex.xc[0], g.tex.yc[0]); glVertex2i(0, g.yres);
-    glTexCoord2f(g.tex.xc[1], g.tex.yc[0]); glVertex2i(g.xres, g.yres);
-    glTexCoord2f(g.tex.xc[1], g.tex.yc[1]); glVertex2i(g.xres, 0);
+    glTexCoord2f(0.0, 0.0); glVertex2i(0,0); // bottom left
+    glTexCoord2f(1.0, 0.0); glVertex2i(g.xres, 0); // bottom right
+    glTexCoord2f(1.0, 1.0); glVertex2i(g.xres, g.yres); // top right
+    glTexCoord2f(0.0, 1.0); glVertex2i(0, g.yres); // top left
     glEnd();
-    glDisable(GL_ALPHA_TEST);
-    // draw city
-    /*
-       glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
-       glBegin(GL_QUADS);
-       glTexCoord2f(g.city.xc[0], g.city.yc[1]); glVertex2i(0, 0);
-       glTexCoord2f(g.city.xc[0], g.city.yc[0]); glVertex2i(0, 100);
-       glTexCoord2f(g.city.xc[1], g.city.yc[0]); glVertex2i(100, 100);
-       glTexCoord2f(g.city.xc[1], g.city.yc[1]); glVertex2i(100, 0);
-       glEnd();
-
-    //draw solaire
-    glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
-    glColor4ub(255,255,255,255);
-    glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
-
-    glBegin(GL_QUADS);
-    glTexCoord2f(g.solaire.xc[0], g.solaire.yc[1]); glVertex2i(g.xres - 200, 0);
-    glTexCoord2f(g.solaire.xc[0], g.solaire.yc[0]); glVertex2i(g.xres - 200, 200);
-    glTexCoord2f(g.solaire.xc[1], g.solaire.yc[0]); glVertex2i(g.xres, 200);
-    glTexCoord2f(g.solaire.xc[1], g.solaire.yc[1]); glVertex2i(g.xres, 0);
-    glEnd();
-    glDisable(GL_ALPHA_TEST);
-    // draw abyss
-    glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
-    glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.0f);
-    glColor4ub(255,255,255,255);
-    glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
-    glBegin(GL_QUADS);
-    glTexCoord2f(g.abyss.xc[0], g.abyss.yc[1]); glVertex2i(0, 0);
-    glTexCoord2f(g.abyss.xc[0], g.abyss.yc[0]); glVertex2i(0, 200);
-    glTexCoord2f(g.abyss.xc[1], g.abyss.yc[0]); glVertex2i(200, 200);
-    glTexCoord2f(g.abyss.xc[1], g.abyss.yc[1]); glVertex2i(200, 0);
-    glEnd();
-    glDisable(GL_ALPHA_TEST);
     */
 }
 
@@ -1562,6 +1566,7 @@ void physics()
 
 void render()
 {
+    glClearColor(0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1.0, 1.0, 1.0);
 
