@@ -20,6 +20,8 @@
 #include "fonts.h"
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -31,14 +33,14 @@
 const int MAX_BOSS_HP = 1000;
 const int MAX_BOSS_SP = 100;
 
-const int MAKOTO_HP = 159;
-const int MAKOTO_SP = 101;
-const int YUKARI_HP = 139;
-const int YUKARI_SP = 105;
-const int JUNPEI_HP = 171;
-const int JUNPEI_SP = 95;
-const int AKIHIKO_HP = 205;
-const int AKIHIKO_SP = 127;
+const int JOKER_HP = 159;
+const int JOKER_SP = 101;
+const int MONA_HP = 139;
+const int MONA_SP = 105;
+const int PANTHER_HP = 171;
+const int PANTHER_SP = 95;
+const int SKULL_HP = 205;
+const int SKULL_SP = 127;
 
 //24-bit color:  8 + 8 + 8 = 24
 //               R   G   B
@@ -114,9 +116,12 @@ class Texture {
 class Character {
 private:
 public:
+    enum ActionList { JOKER_ACTIONS, MONA_ACTIONS, PANTHER_ACTIONS, SKULL_ACTIONS, KAMOSHIDA_ACTIONS };
+    ActionList actionList;
+
     // Character Constructor
-    Character(std::string _name, int _hp, int _max_hp, int _sp, int _max_sp, std::string _weaknesses, std::string _resistances)
-    : name(_name), hp(_hp), max_hp(_max_hp), sp(_sp), max_sp(_max_sp), weakness(_weaknesses), resistance(_resistances), isDowned(false) {}
+    Character(std::string _name, int _hp, int _max_hp, int _sp, int _max_sp, std::string _weaknesses, std::string _resistances, ActionList _actionList)
+    : name(_name), hp(_hp), max_hp(_max_hp), sp(_sp), max_sp(_max_sp), weakness(_weaknesses), resistance(_resistances), isDowned(false), actionList(_actionList) {}
 
     int hp;
     int sp; // Spell points
@@ -126,6 +131,12 @@ public:
     std::string weakness;
     std::string resistance;
     bool isDowned;
+    int initiative;
+
+    void rollInitiative() {
+        initiative = rand() % 20 + 1; // Roll a d20 for initiative
+    }
+
 
     // Member function to reduce character's HP
     void takeDamage(int damage) {
@@ -182,230 +193,588 @@ public:
     //------------------------------------------------------ ALL SKILLS
 
     // Member function to perform a physical attack
-    void bash(Character& target) {
-        // Check if the target is downed
-        if (!target.isCharacterDowned()) {
-            // Generate random damage between 21-25
-            int damage = rand() % 5 + 21;
-            // Apply the damage to the target
-            std::cout << target.name << " takes " << damage << " damage \n";
-            target.takeDamage(damage);
-        } else {
-            std::cout << target.name << " is already downed and cannot be attacked!\n";
+    void bash(Character& caster, Character& target) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                std::cout << caster.name << " uses Bash!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "strike") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "strike"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
+        }
+    }
+
+    void cleave(Character& caster, Character& target) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                std::cout << caster.name << " uses Cleave!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "slash") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "slash"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
+        }
+    }
+
+    void shot(Character& caster, Character& target) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                std::cout << caster.name << " uses shot!\n";
+                int damage = rand() % 5 + 21;
+                // Check if the target is weak to fire
+                if (target.weakness == "pierce") {
+                    // If the target is weak to fire, increase damage
+                    damage *= 2;
+                    std::cout << target.name << " is weak! \n";
+                } else if (target.resistance == "pierce"){
+                    // If the target is resistant to fire, decrease damage
+                    damage /= 2;
+                    std::cout << target.name << " resists! \n";
+                }
+                std::cout << target.name << " takes " << damage << " damage \n";
+                target.takeDamage(damage);
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
         }
     }
 
     void solar(Character& caster, Character& target) {
-        if (!target.isCharacterDowned()) {
-            if (caster.sp >= 10) {
-                std::cout << caster.name << " casts solar!\n";
-                int damage = rand() % 5 + 21;
-                // Check if the target is weak to fire
-                if (target.weakness == "fire") {
-                    // If the target is weak to fire, increase damage
-                    damage *= 2;
-                    std::cout << target.name << " is weak! \n";
-                } else if (target.resistance == "fire"){
-                    // If the target is resistant to fire, decrease damage
-                    damage /= 2;
-                    std::cout << target.name << " resists! \n";
-                }
-                std::cout << target.name << " takes " << damage << " damage \n";
-                target.takeDamage(damage);
-                caster.reduceSP(10);
-            } else {
-                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-            }
-        }
-        else {
-            std::cout << target.name << " is downed and cannot take damage!\n\n";
-        }
-    }
-
-    void tornado(Character& caster, Character& target) {
-        if (!target.isCharacterDowned()) {
-            if (caster.sp >= 10) {
-                std::cout << caster.name << " casts tornado!\n";
-                int damage = rand() % 5 + 21;
-                // Check if the target is weak to fire
-                if (target.weakness == "wind") {
-                    // If the target is weak to fire, increase damage
-                    damage *= 2;
-                    std::cout << target.name << " is weak! \n";
-                } else if (target.resistance == "wind"){
-                    // If the target is resistant to fire, decrease damage
-                    damage /= 2;
-                    std::cout << target.name << " resists! \n";
-                }
-                std::cout << target.name << " takes " << damage << " damage \n";
-                target.takeDamage(damage);
-                caster.reduceSP(10);
-            } else {
-                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-            }
-        }
-        else {
-            std::cout << target.name << " is downed and cannot take damage!\n\n";
-        }
-    }
-
-    void thunder(Character& caster, Character& target) {
-        if (!target.isCharacterDowned()) {
-            if (caster.sp >= 10) {
-                std::cout << caster.name << " casts thunder!\n";
-                int damage = rand() % 5 + 21;
-                // Check if the target is weak to fire
-                if (target.weakness == "electric") {
-                    // If the target is weak to fire, increase damage
-                    damage *= 2;
-                    std::cout << target.name << " is weak! \n";
-                } else if (target.resistance == "electric"){
-                    // If the target is resistant to fire, decrease damage
-                    damage /= 2;
-                    std::cout << target.name << " resists! \n";
-                }
-                std::cout << target.name << " takes " << damage << " damage \n";
-                target.takeDamage(damage);
-                caster.reduceSP(10);
-            } else {
-                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-            }
-        }
-        else {
-            std::cout << target.name << " is downed and cannot take damage!\n\n";
-        }
-    }
-
-    void blizzard(Character& caster, Character& target) {
-        if (!target.isCharacterDowned()) {
-            if (caster.sp >= 10) {
-                std::cout << caster.name << " casts blizzard!\n";
-                int damage = rand() % 5 + 21;
-                // Check if the target is weak to fire
-                if (target.weakness == "ice") {
-                    // If the target is weak to fire, increase damage
-                    damage *= 2;
-                    std::cout << target.name << " is weak! \n";
-                } else if (target.resistance == "ice"){
-                    // If the target is resistant to fire, decrease damage
-                    damage /= 2;
-                    std::cout << target.name << " resists! \n";
-                }
-                std::cout << target.name << " takes " << damage << " damage \n";
-                target.takeDamage(damage);
-                caster.reduceSP(10);
-            } else {
-                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-            }
-        }
-        else {
-            std::cout << target.name << " is downed and cannot take damage!\n\n";
-        }
-    }
-
-    void cure(Character& caster, Character& target) {
-        if (!target.isCharacterDowned()) {
-            if (target.hp < target.max_hp) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
                 if (caster.sp >= 10) {
-                    std::cout << caster.name << " casts cure!\n";
-                    int heal = rand() % 5 + 21;
-                    std::cout << target.name << " restores " << heal << " health\n";
-                    target.healDamage(heal);
+                    std::cout << caster.name << " casts solar!\n";
+                    int damage = rand() % 5 + 21;
+                    // Check if the target is weak to fire
+                    if (target.weakness == "fire") {
+                        // If the target is weak to fire, increase damage
+                        damage *= 2;
+                        std::cout << target.name << " is weak! \n";
+                    } else if (target.resistance == "fire"){
+                        // If the target is resistant to fire, decrease damage
+                        damage /= 2;
+                        std::cout << target.name << " resists! \n";
+                    }
+                    std::cout << target.name << " takes " << damage << " damage \n";
+                    target.takeDamage(damage);
                     caster.reduceSP(10);
                 } else {
                     std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
                 }
-            } else {
-                std::cout << target.name << " is already at full health!\n\n";
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
             }
         }
         else {
-            std::cout << target.name << " is downed and cannot regain health!\n\n";
+            std::cout << caster.name << " is downed and cannot act!\n\n";
+        }
+    }
+
+    void tornado(Character& caster, Character& target) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                if (caster.sp >= 10) {
+                    std::cout << caster.name << " casts tornado!\n";
+                    int damage = rand() % 5 + 21;
+                    // Check if the target is weak to fire
+                    if (target.weakness == "wind") {
+                        // If the target is weak to fire, increase damage
+                        damage *= 2;
+                        std::cout << target.name << " is weak! \n";
+                    } else if (target.resistance == "wind"){
+                        // If the target is resistant to fire, decrease damage
+                        damage /= 2;
+                        std::cout << target.name << " resists! \n";
+                    }
+                    std::cout << target.name << " takes " << damage << " damage \n";
+                    target.takeDamage(damage);
+                    caster.reduceSP(10);
+                } else {
+                    std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                }
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
+        }
+    }
+
+    void thunder(Character& caster, Character& target) {
+        if(!caster.isDowned) {
+            if (!target.isDowned) {
+                if (caster.sp >= 10) {
+                    std::cout << caster.name << " casts thunder!\n";
+                    int damage = rand() % 5 + 21;
+                    // Check if the target is weak to fire
+                    if (target.weakness == "electric") {
+                        // If the target is weak to fire, increase damage
+                        damage *= 2;
+                        std::cout << target.name << " is weak! \n";
+                    } else if (target.resistance == "electric"){
+                        // If the target is resistant to fire, decrease damage
+                        damage /= 2;
+                        std::cout << target.name << " resists! \n";
+                    }
+                    std::cout << target.name << " takes " << damage << " damage \n";
+                    target.takeDamage(damage);
+                    caster.reduceSP(10);
+                } else {
+                    std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                }
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
+        }
+    }
+
+    void blizzard(Character& caster, Character& target) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                if (caster.sp >= 10) {
+                    std::cout << caster.name << " casts blizzard!\n";
+                    int damage = rand() % 5 + 21;
+                    // Check if the target is weak to fire
+                    if (target.weakness == "ice") {
+                        // If the target is weak to fire, increase damage
+                        damage *= 2;
+                        std::cout << target.name << " is weak! \n";
+                    } else if (target.resistance == "ice"){
+                        // If the target is resistant to fire, decrease damage
+                        damage /= 2;
+                        std::cout << target.name << " resists! \n";
+                    }
+                    std::cout << target.name << " takes " << damage << " damage \n";
+                    target.takeDamage(damage);
+                    caster.reduceSP(10);
+                } else {
+                    std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                }
+            }
+            else {
+                std::cout << target.name << " is downed and cannot take damage!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
+        }
+    }
+
+    void cure(Character& caster, Character& target) {
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                if (target.hp < target.max_hp) {
+                    if (caster.sp >= 10) {
+                        std::cout << caster.name << " casts cure!\n";
+                        int heal = rand() % 5 + 21;
+                        std::cout << target.name << " restores " << heal << " health\n";
+                        target.healDamage(heal);
+                        caster.reduceSP(10);
+                    } else {
+                        std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                    }
+                } else {
+                    std::cout << target.name << " is already at full health!\n\n";
+                }
+            }
+            else {
+                std::cout << target.name << " is downed and cannot regain health!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
         }
     }
 
     // Heal all party members
     void cureAll(Character& caster, Character characters[]) {
-        bool anyDamaged = false; // Flag to track if any character is damaged
-        for (int i = 0; i < 4; ++i) {
-            if (characters[i].hp < characters[i].max_hp && !characters[i].isDowned) {
-                anyDamaged = true;
-                break; // If any character is damaged and not downed, no need to check further
-            }
-        }
-
-        if (!anyDamaged) {
-            std::cout << "All party members are either at full health or downed!\n\n";
-            return; // Exit the function early if all damaged characters are downed or at full health
-        }
-
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts cure all!\n";
-            srand(time(NULL));
+        if (!caster.isDowned) {
+            bool anyDamaged = false; // Flag to track if any character is damaged
             for (int i = 0; i < 4; ++i) {
                 if (characters[i].hp < characters[i].max_hp && !characters[i].isDowned) {
-                    int heal = rand() % 5 + 21;
-                    characters[i].healDamage(heal);
-                    std::cout << characters[i].name << " restores " << heal << " health\n";
+                    anyDamaged = true;
+                    break; // If any character is damaged and not downed, no need to check further
                 }
             }
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+
+            if (!anyDamaged) {
+                std::cout << "All party members are either at full health or downed!\n\n";
+                return; // Exit the function early if all damaged characters are downed or at full health
+            }
+
+            if (caster.sp >= 10) {
+                std::cout << caster.name << " casts cure all!\n";
+                srand(time(NULL));
+                for (int i = 0; i < 4; ++i) {
+                    if (characters[i].hp < characters[i].max_hp && !characters[i].isDowned) {
+                        int heal = rand() % 5 + 21;
+                        characters[i].healDamage(heal);
+                        std::cout << characters[i].name << " restores " << heal << " health\n";
+                    }
+                }
+                caster.reduceSP(10);
+            } else {
+                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
         }
     }
 
     void spDrop(Character& caster, Character& target) {
-        if (!target.isCharacterDowned()) {
-            if (target.sp < target.max_sp) {
-                if (caster.sp >= 10) {
-                    std::cout << caster.name << " uses an SP Drop!\n";
-                    int healSP = rand() % 5 + 21;
-                    std::cout << target.name << " restores " << healSP << " SP\n";
-                    target.healSP(healSP);
+        if (!caster.isDowned) {
+            if (!target.isDowned) {
+                if (target.sp < target.max_sp) {
+                    if (caster.sp >= 10) {
+                        std::cout << caster.name << " uses an SP Drop!\n";
+                        int healSP = rand() % 5 + 21;
+                        std::cout << target.name << " restores " << healSP << " SP\n";
+                        target.healSP(healSP);
+                    } else {
+                        std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                    }
                 } else {
-                    std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+                    std::cout << target.name << " is already at full SP!\n\n";
                 }
-            } else {
-                std::cout << target.name << " is already at full SP!\n\n";
+            }
+            else {
+                std::cout << target.name << " is downed and cannot regain SP!\n\n";
             }
         }
         else {
-            std::cout << target.name << " is downed and cannot regain SP!\n\n";
+            std::cout << caster.name << " is downed and cannot act!\n\n";
         }
     }
 
     void almighty(Character& caster, Character characters[]) {
-        if (caster.sp >= 10) {
-            std::cout << caster.name << " casts almighty!\n";
-            srand(time(NULL));
-            for (int i = 0; i < 4; ++i) {
-                if (!characters[i].isDowned) {
-                    int damage = rand() % 5 + 21;
-                    characters[i].takeDamage(damage);
-                    std::cout << characters[i].name << " takes " << damage << " damage \n";
-                } else {
-                    std::cout << characters[i].name << " is downed and cannot take damage!\n";
+        if (!caster.isDowned) {
+            if (caster.sp >= 10) {
+                std::cout << caster.name << " casts almighty!\n";
+                srand(time(NULL));
+                for (int i = 0; i < 4; ++i) {
+                    if (!characters[i].isDowned) {
+                        int damage = rand() % 5 + 21;
+                        characters[i].takeDamage(damage);
+                        std::cout << characters[i].name << " takes " << damage << " damage \n";
+                    } else {
+                        std::cout << characters[i].name << " is downed and cannot take damage!\n";
+                    }
                 }
+                caster.reduceSP(10);
+            } else {
+                std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
             }
-            caster.reduceSP(10);
-        } else {
-            std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
         }
     }
 
     void revive(Character& caster, Character& target) {
-        if (target.isDowned) {
-            std::cout << caster.name << " casts revive on " << target.name << "!\n";
-            target.isDowned = false; // Revive the target by setting isDowned to false
-            int heal = target.max_hp / 2; // Heal the target to half of their max HP
-            std::cout << target.name << " has been revived!" << "!\n\n";
-            target.healDamage(heal);
-        } else {
-            std::cout << target.name <<" is not incapacitated!\n";
+        if (!caster.isDowned) {
+            if (target.isDowned) {
+                std::cout << caster.name << " casts revive on " << target.name << "!\n";
+                target.isDowned = false; // Revive the target by setting isDowned to false
+                int heal = target.max_hp / 2; // Heal the target to half of their max HP
+                std::cout << target.name << " has been revived!" << "!\n\n";
+                target.healDamage(heal);
+            } else {
+                std::cout << target.name <<" is not incapacitated!\n";
+            }
+        }
+        else {
+            std::cout << caster.name << " is downed and cannot act!\n\n";
         }
     }
 
+
+    void selectAction(Character characters[], Character boss[], int characterIndex) {
+        // Implement action selection based on the character's action list
+        switch (characters[characterIndex].actionList) {
+            // JOKER's Turns
+            case JOKER_ACTIONS: {
+                int action;
+                bool validAction = false;
+                while (!validAction){
+                    std::cout << "What should JOKER do?\n";
+                    std::cout << "1. Blizzard\n";
+                    std::cout << "2. Cleave\n";
+                    std::cout << "3. Cure\n";
+                    std::cin >> action;
+                    switch (action) {
+                        // Blizzard
+                        case 1: {
+                            characters[0].blizzard(characters[0], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        // Bash
+                        case 2: {
+                            characters[0].cleave(characters[0], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        // Cure
+                        case 3: {
+                            int target;
+                            bool validTarget = false;
+                            while (!validTarget) {
+                                std::cout << "Select a target:\n";
+                                std::cout << "1. MONA\n";
+                                std::cout << "2. PANTHER\n";
+                                std::cout << "3. SKULL\n";
+                                std::cin >> target;
+                                switch (target) {
+                                    case 1:
+                                        characters[0].cure(characters[0], characters[1]);
+                                        validTarget = true;
+                                        break;
+                                    case 2:
+                                        characters[0].cure(characters[0], characters[2]);
+                                        validTarget = true;
+                                        break;
+                                    case 3:
+                                        characters[0].cure(characters[0], characters[3]);
+                                        validTarget = true;
+                                        break;
+                                    default:
+                                        std::cout << "Invalid target!\n";
+                                        break;
+                                }
+                            }
+                            validAction = true;
+                            break;
+                        }
+                        default:
+                            std::cout << "Invalid action!\n";
+                            break;
+                    }
+                }
+                break;
+            }
+            // MONA's Turns
+            case MONA_ACTIONS: {
+                // Implement MONA's action selection logic
+                int action;
+                bool validAction = false;
+                while (!validAction){
+                    std::cout << "What should MONA do?\n";
+                    std::cout << "1. Tornado\n";
+                    std::cout << "2. Cure\n";
+                    std::cout << "3. Revive\n";
+                    std::cin >> action;
+                    switch (action) {
+                        case 1: {
+                            characters[1].tornado(characters[1], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        case 2: {
+                            int target;
+                            bool validTarget = false;
+                            while (!validTarget) {
+                                std::cout << "Select a target:\n";
+                                std::cout << "1. JOKER\n";
+                                std::cout << "2. PANTHER\n";
+                                std::cout << "3. SKULL\n";
+                                std::cin >> target;
+                                switch (target) {
+                                    case 1:
+                                        characters[1].cure(characters[1], characters[0]);
+                                        validTarget = true;
+                                        break;
+                                    case 2:
+                                        characters[1].cure(characters[1], characters[2]); 
+                                        validTarget = true;
+                                        break;
+                                    case 3:
+                                        characters[1].cure(characters[1], characters[3]);
+                                        validTarget = true;
+                                        break;
+                                    default:
+                                        std::cout << "Invalid target!\n";
+                                        break;
+                                }
+                            }
+                            validAction = true;
+                            break;
+                        }
+                        case 3: {
+                            int target;
+                            bool validTarget = false;
+                            while (!validTarget) {
+                                std::cout << "Select a target:\n";
+                                std::cout << "1. JOKER\n";
+                                std::cout << "2. PANTHER\n";
+                                std::cout << "3. SKULL\n";
+                                std::cin >> target;
+                                switch (target) {
+                                    case 1:
+                                        characters[1].revive(characters[1], characters[0]);
+                                        validTarget = true;
+                                        break;
+                                    case 2:
+                                        characters[1].revive(characters[1], characters[2]); 
+                                        validTarget = true;
+                                        break;
+                                    case 3:
+                                        characters[1].revive(characters[1], characters[3]);
+                                        validTarget = true;
+                                        break;
+                                    default:
+                                        std::cout << "Invalid target!\n";
+                                        break;
+                                }
+                            }
+                            validAction = true;
+                            break;
+                        }
+                        default:
+                            std::cout << "Invalid action!\n";
+                            break;
+                    }
+                }
+                break;
+            }
+            // PANTHER's Turns
+            case PANTHER_ACTIONS: {
+                int action;
+                bool validAction = false;
+                while (!validAction){
+                    std::cout << "What should PANTHER do?\n";
+                    std::cout << "1. SOLAR\n";
+                    std::cout << "2. SHOT\n";
+                    std::cout << "3. Cure\n";
+                    std::cin >> action;
+                    switch (action) {
+                        case 1: {
+                            characters[2].solar(characters[2], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        case 2: {
+                            characters[2].shot(characters[2], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        case 3: {
+                            int target;
+                            bool validTarget = false;
+                            while (!validTarget) {
+                                std::cout << "Select a target:\n";
+                                std::cout << "1. JOKER\n";
+                                std::cout << "2. MONA\n";
+                                std::cout << "3. SKULL\n";
+                                std::cin >> target;
+                                switch (target) {
+                                    case 1:
+                                        characters[2].cure(characters[2], characters[0]);
+                                        validTarget = true;
+                                        break;
+                                    case 2:
+                                        characters[2].cure(characters[2], characters[1]);
+                                        validTarget = true;
+                                        break;
+                                    case 3:
+                                        characters[2].cure(characters[2], characters[3]);
+                                        validTarget = true;
+                                        break;
+                                    default:
+                                        std::cout << "Invalid target!\n";
+                                        break;
+                                }
+                            }
+                            validAction = true;
+                            break;
+                        }
+                        default:
+                            std::cout << "Invalid action!\n";
+                            break;
+                    }
+                }
+                break;
+            }
+            // SKULL's Turns
+            case SKULL_ACTIONS: {
+                int action;
+                bool validAction = false;
+                while (!validAction){
+                    std::cout << "What should SKULL do?\n";
+                    std::cout << "1. THUNDER\n";
+                    std::cout << "2. CLEAVE\n";
+                    std::cout << "3. BASH\n";
+                    std::cin >> action;
+                    switch (action) {
+                        case 1: {
+                            characters[3].thunder(characters[3], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        case 2: {
+                            characters[3].cleave(characters[3], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        case 3: {
+                            characters[3].bash(characters[3], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                        default:
+                            std::cout << "Invalid action!\n";
+                            break;
+                    }
+                }
+                break;
+            }
+            // KAMOSHIDA's Turns
+            case KAMOSHIDA_ACTIONS:
+                break;
+        }
+    }
 };
 
 
@@ -420,14 +789,14 @@ class Global {
         Texture city;
         
         Character characters[4] = {
-            Character("Makoto", MAKOTO_HP, MAKOTO_HP, MAKOTO_SP, MAKOTO_SP, "ice", "fire"),
-            Character("Yukari", YUKARI_HP, YUKARI_HP, YUKARI_SP, YUKARI_SP, "electric", "wind"),
-            Character("Junpei", JUNPEI_HP, JUNPEI_HP, JUNPEI_SP, JUNPEI_SP, "wind", "fire"),
-            Character("Akihiko", AKIHIKO_HP, AKIHIKO_HP, AKIHIKO_SP, AKIHIKO_SP, "fire", "electric")
+            Character("JOKER", JOKER_HP, JOKER_HP, JOKER_SP, JOKER_SP, "ice", "fire", Character::JOKER_ACTIONS),
+            Character("MONA", MONA_HP, MONA_HP, MONA_SP, MONA_SP, "electric", "wind", Character::MONA_ACTIONS),
+            Character("PANTHER", PANTHER_HP, PANTHER_HP, PANTHER_SP, PANTHER_SP, "wind", "fire", Character::PANTHER_ACTIONS),
+            Character("SKULL", SKULL_HP, SKULL_HP, SKULL_SP, SKULL_SP, "fire", "electric", Character::SKULL_ACTIONS),
         };
 
         Character boss[1] = {
-            Character("Nyx", MAX_BOSS_HP, MAX_BOSS_HP, MAX_BOSS_SP, MAX_BOSS_SP, "none", "none")
+            Character("KAMOSHIDA", MAX_BOSS_HP, MAX_BOSS_HP, MAX_BOSS_SP, MAX_BOSS_SP, "none", "none", Character::KAMOSHIDA_ACTIONS)
         };
 
 
@@ -536,6 +905,7 @@ void return_to_menu();
 void display_menu();
 void display_startup();
 void display_hp();
+bool compareInitiative(const Character& a, const Character& b);
 
 //===========================================================================
 //===========================================================================
@@ -686,6 +1056,11 @@ void init_opengl(void)
 
 }
 
+// Function to sort characters based on initiative (descending order)
+bool compareInitiative(const Character& a, const Character& b) {
+    return a.initiative > b.initiative;
+}
+
 void init() {
 
 }
@@ -722,31 +1097,27 @@ int check_keys(XEvent *e)
         int key = XLookupKeysym(&e->xkey, 0);
         switch (key) {
             case XK_1:
-                g.characters[0].solar(g.characters[2], g.characters[3]);
+                g.characters[0].selectAction(g.characters, g.boss, 0);
                 break;
             case XK_2:
-                g.characters[0].thunder(g.characters[3], g.characters[1]);
+                g.characters[1].selectAction(g.characters, g.boss, 1);
                 break;
             case XK_3:
-                g.characters[0].tornado(g.characters[1], g.characters[2]);
+                g.characters[2].selectAction(g.characters, g.boss, 2);
                 break;
             case XK_4:
-                g.characters[0].blizzard(g.characters[0], g.characters[0]);
+                g.characters[3].selectAction(g.characters, g.boss, 3);
                 break;
             case XK_5:
-                g.characters[0].cure(g.characters[0], g.characters[0]);
+                g.boss[0].almighty(g.boss[0], g.characters);
                 break;
             case XK_6:
-                g.characters[0].cureAll(g.characters[0], g.characters);
                 break;
             case XK_7:
-                g.characters[0].spDrop(g.characters[0], g.characters[0]);
                 break;
             case XK_8:
-                g.characters[0].revive(g.characters[0], g.characters[3]);
                 break;
             case XK_9:
-                g.boss[0].almighty(g.boss[0], g.characters);
                 break;
             case XK_Escape:
             return 1;
@@ -758,6 +1129,7 @@ int check_keys(XEvent *e)
 //Added Play Game - Nicklas Chiang
 void play_game()
 {
+    srand(time(NULL));
     int done = 0;
     while (!done) {
         while (x11.getXPending()) {
@@ -766,6 +1138,8 @@ void play_game()
             check_mouse(&e);
             done = check_keys(&e);
         }
+        // Combat sequence
+            // Simulate combat rounds
         physics();
         render();
         x11.swapBuffers();
@@ -1201,23 +1575,17 @@ void render()
     r.left = 20;
     r.center = 0;
 
-    ggprint8b(&r, 16, 0xFFFFFF, "press 1 to make Junpei cast fire on Aki");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 2 to make Aki cast electric on Yukari");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 3 to make Yukari cast wind on Junpei");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 4 to make Makoto cast ice on Makoto");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 4 for skull actions");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 5 to make Makoto cast heal himself");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 5 for kamoshida to attack all");
     r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 6 to make Makoto heal the party");
-    r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 7 to make Makoto restore SP to Makoto");
-    r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 8 to make Makoto revive Akihiko");
-    r.bot -= 20;
-    ggprint8b(&r, 16, 0xFFFFFF, "press 9 to make Nyx cast almighty on party");
+
 
 }
 
