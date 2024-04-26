@@ -758,7 +758,11 @@ class Character {
 												   std::cout << "1. JOKER\n";
 												   std::cout << "2. PANTHER\n";
 												   std::cout << "3. SKULL\n";
-												   std::cin >> target;
+												    while (!target)
+													{
+														XEvent e = x11.getXNextEvent();
+														target = check_keys2(&e);
+													}
 												   switch (target) {
 													   case 1:
 														   characters[1].cure(characters[1], characters[0]);
