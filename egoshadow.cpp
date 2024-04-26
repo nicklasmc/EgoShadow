@@ -315,19 +315,23 @@ class Character {
 			if (!caster.isDowned) {
 				if (!target.isDowned) {
 					std::cout << caster.name << " uses Bash!\n";
-					int damage = rand() % 5 + 21;
-					// Check if the target is weak to fire
-					if (target.weakness == "strike") {
-						// If the target is weak to fire, increase damage
-						damage *= 2;
-						std::cout << target.name << " is weak! \n";
-					} else if (target.resistance == "strike"){
-						// If the target is resistant to fire, decrease damage
-						damage /= 2;
-						std::cout << target.name << " resists! \n";
-					}
-					std::cout << target.name << " takes " << damage << " damage \n";
-					target.takeDamage(damage);
+                    srand(time(nullptr));
+                    int miss_chance = rand() % 20 + 1; // Random number between 1 and 20 for miss chance
+                    if (miss_chance < 5) {
+                        std::cout << caster.name << "'s attack misses!\n";
+                    } else {
+                        int damage = rand() % 26 + 100;
+                        int critical = rand() % 20 + 1;
+                        if (critical == 20) {
+                            // If critical, double damage
+                            damage *= 2;
+                            std::cout << target.name << " lands a critical hit! \n";
+                        }
+                        std::cout << target.name << " takes " << damage << " damage \n";
+                        target.takeDamage(damage);
+                        //HP cost for phys skills
+                        caster.takeDamage(20);
+                    }
 				}
 				else {
 					std::cout << target.name << " is downed and cannot take damage!\n\n";
@@ -342,19 +346,22 @@ class Character {
 			if (!caster.isDowned) {
 				if (!target.isDowned) {
 					std::cout << caster.name << " uses Cleave!\n";
-					int damage = rand() % 5 + 21;
-					// Check if the target is weak to fire
-					if (target.weakness == "slash") {
-						// If the target is weak to fire, increase damage
-						damage *= 2;
-						std::cout << target.name << " is weak! \n";
-					} else if (target.resistance == "slash"){
-						// If the target is resistant to fire, decrease damage
-						damage /= 2;
-						std::cout << target.name << " resists! \n";
-					}
-					std::cout << target.name << " takes " << damage << " damage \n";
-					target.takeDamage(damage);
+                    srand(time(nullptr));
+                    int miss_chance = rand() % 20 + 1; // Random number between 1 and 20 for miss chance
+                    if (miss_chance < 5) {
+                        std::cout << caster.name << "'s attack misses!\n";
+                    } else {
+                        int damage = rand() % 21 + 90;
+                        int critical = rand() % 20 + 1;
+                        if (critical == 20) {
+                            // If critical, double damage
+                            damage *= 2;
+                            std::cout << target.name << " lands a critical hit! \n";
+                        }
+                        std::cout << target.name << " takes " << damage << " damage \n";
+                        target.takeDamage(damage);
+                        caster.takeDamage(25);
+                    }
 				}
 				else {
 					std::cout << target.name << " is downed and cannot take damage!\n\n";
@@ -369,19 +376,22 @@ class Character {
 			if (!caster.isDowned) {
 				if (!target.isDowned) {
 					std::cout << caster.name << " uses shot!\n";
-					int damage = rand() % 5 + 21;
-					// Check if the target is weak to fire
-					if (target.weakness == "pierce") {
-						// If the target is weak to fire, increase damage
-						damage *= 2;
-						std::cout << target.name << " is weak! \n";
-					} else if (target.resistance == "pierce"){
-						// If the target is resistant to fire, decrease damage
-						damage /= 2;
-						std::cout << target.name << " resists! \n";
-					}
-					std::cout << target.name << " takes " << damage << " damage \n";
-					target.takeDamage(damage);
+                    srand(time(nullptr));
+                    int miss_chance = rand() % 20 + 1; // Random number between 1 and 20 for miss chance
+                    if (miss_chance < 5) {
+                        std::cout << caster.name << "'s attack misses!\n";
+                    } else {
+                        int damage = rand() % 21 + 90;
+                        int critical = rand() % 20 + 1;
+                        if (critical == 20) {
+                            // If critical, double damage
+                            damage *= 2;
+                            std::cout << target.name << " lands a critical hit! \n";
+                        }
+                        std::cout << target.name << " takes " << damage << " damage \n";
+                        target.takeDamage(damage);
+                        caster.takeDamage(22);
+                    }
 				}
 				else {
 					std::cout << target.name << " is downed and cannot take damage!\n\n";
@@ -397,7 +407,7 @@ class Character {
 				if (!target.isDowned) {
 					if (caster.sp >= 10) {
 						std::cout << caster.name << " casts solar!\n";
-						int damage = rand() % 5 + 21;
+						int damage = rand() % 41 + 80;
 						// Check if the target is weak to fire
 						if (target.weakness == "fire") {
 							// If the target is weak to fire, increase damage
@@ -429,14 +439,14 @@ class Character {
 				if (!target.isDowned) {
 					if (caster.sp >= 10) {
 						std::cout << caster.name << " casts tornado!\n";
-						int damage = rand() % 5 + 21;
-						// Check if the target is weak to fire
+						int damage = rand() % 41 + 80;
+						// Check if the target is weak to wind
 						if (target.weakness == "wind") {
-							// If the target is weak to fire, increase damage
+							// If the target is weak to wind, increase damage
 							damage *= 2;
 							std::cout << target.name << " is weak! \n";
 						} else if (target.resistance == "wind"){
-							// If the target is resistant to fire, decrease damage
+							// If the target is resistant to wind, decrease damage
 							damage /= 2;
 							std::cout << target.name << " resists! \n";
 						}
@@ -461,14 +471,14 @@ class Character {
 				if (!target.isDowned) {
 					if (caster.sp >= 10) {
 						std::cout << caster.name << " casts thunder!\n";
-						int damage = rand() % 5 + 21;
-						// Check if the target is weak to fire
+						int damage = rand() % 41 + 80;
+						// Check if the target is weak to electric
 						if (target.weakness == "electric") {
-							// If the target is weak to fire, increase damage
+							// If the target is weak to electric, increase damage
 							damage *= 2;
 							std::cout << target.name << " is weak! \n";
 						} else if (target.resistance == "electric"){
-							// If the target is resistant to fire, decrease damage
+							// If the target is resistant to electric, decrease damage
 							damage /= 2;
 							std::cout << target.name << " resists! \n";
 						}
@@ -493,14 +503,14 @@ class Character {
 				if (!target.isDowned) {
 					if (caster.sp >= 10) {
 						std::cout << caster.name << " casts blizzard!\n";
-						int damage = rand() % 5 + 21;
-						// Check if the target is weak to fire
+						int damage = rand() % 41 + 80;
+						// Check if the target is weak to ice
 						if (target.weakness == "ice") {
-							// If the target is weak to fire, increase damage
+							// If the target is weak to ice, increase damage
 							damage *= 2;
 							std::cout << target.name << " is weak! \n";
 						} else if (target.resistance == "ice"){
-							// If the target is resistant to fire, decrease damage
+							// If the target is resistant to ice, decrease damage
 							damage /= 2;
 							std::cout << target.name << " resists! \n";
 						}
@@ -611,6 +621,66 @@ class Character {
 			}
 		}
 
+        void vAssault(Character& caster, Character& target) {
+			if (!caster.isDowned) {
+				if (!target.isDowned) {
+					std::cout << caster.name << " uses Volleyball Assault!\n";
+                    srand(time(nullptr));
+                    for (int i = 0; i < 3; i++) {
+                        int miss_chance = rand() % 20 + 1; // Random number between 1 and 20 for miss chance
+                        if (miss_chance < 5) {
+                            std::cout << caster.name << "'s attack misses!\n";
+                        } else {
+                            int damage = rand() % 14 + 15;
+                            int critical = rand() % 20 + 1;
+                            if (critical == 20) {
+                                // If critical, double damage
+                                damage *= 2;
+                                std::cout << target.name << " lands a critical hit! \n";
+                            }
+                            std::cout << target.name << " takes " << damage << " damage \n";
+                            target.takeDamage(damage);
+                        }
+                    }
+				}
+				else {
+					std::cout << target.name << " is downed and cannot take damage!\n\n";
+				}
+			}
+			else {
+				std::cout << caster.name << " is downed and cannot act!\n\n";
+			}
+		}
+
+        void gKnife(Character& caster, Character& target) {
+			if (!caster.isDowned) {
+				if (!target.isDowned) {
+					std::cout << caster.name << " uses Golden Knife!\n";
+                    srand(time(nullptr));
+                    int miss_chance = rand() % 20 + 1; // Random number between 1 and 20 for miss chance
+                    if (miss_chance < 5) {
+                        std::cout << caster.name << "'s attack misses!\n";
+                    } else {
+                        int damage = rand() % 14 + 15;
+                        int critical = rand() % 20 + 1;
+                        if (critical == 20) {
+                            // If critical, double damage
+                            damage *= 2;
+                            std::cout << target.name << " lands a critical hit! \n";
+                        }
+                        std::cout << target.name << " takes " << damage << " damage \n";
+                        target.takeDamage(damage);
+                    }
+				}
+				else {
+					std::cout << target.name << " is downed and cannot take damage!\n\n";
+				}
+			}
+			else {
+				std::cout << caster.name << " is downed and cannot act!\n\n";
+			}
+		}
+
 		void almighty(Character& caster, Character characters[]) {
 			if (!caster.isDowned) {
 				if (caster.sp >= 10) {
@@ -618,7 +688,7 @@ class Character {
 					srand(time(NULL));
 					for (int i = 0; i < 4; ++i) {
 						if (!characters[i].isDowned) {
-							int damage = rand() % 5 + 21;
+							int damage = rand() % 26 + 40;
 							characters[i].takeDamage(damage);
 							std::cout << characters[i].name << " takes " << damage << " damage \n";
 						} else {
@@ -658,289 +728,343 @@ class Character {
 			switch (characters[characterIndex].actionList) {
 				// JOKER's Turns
 				case JOKER_ACTIONS: {
-							    int action = NULL;
-							    bool validAction = false;
-							    while (!validAction){
-								    std::cout << "What should JOKER do?\n";
-								    std::cout << "1. Blizzard\n";
-								    std::cout << "2. Cleave\n";
-								    std::cout << "3. Cure\n";
-								    //std::cin >> action;
-								    while (!action) {
-								    	XEvent e = x11.getXNextEvent();
-								    	action = check_keys2(&e);
-								    }
-								    std::cout << "checkKeys2 is " << action << std::endl;
-								    switch (action) {
-									    // Blizzard
-									    case 1: {
-											    characters[0].blizzard(characters[0], boss[0]);
-											    validAction = true;
-											    break;
-										    }
-										    // Bash
-									    case 2: {
-											    characters[0].cleave(characters[0], boss[0]);
-											    validAction = true;
-											    break;
-										    }
-										    // Cure
-									    case 3: {
-											    int target = NULL;
-											    bool validTarget = false;
-											    while (!validTarget) {
-												    std::cout << "Select a target:\n";
-												    std::cout << "1. MONA\n";
-												    std::cout << "2. PANTHER\n";
-													std::cout << "3. SKULL\n";
-													while (!target)
-													{
-														XEvent e = x11.getXNextEvent();
-														target = check_keys2(&e);
-													}
-													switch (target) {
-													    case 1:
-														    characters[0].cure(characters[0], characters[1]);
-														    validTarget = true;
-														    break;
-													    case 2:
-														    characters[0].cure(characters[0], characters[2]);
-														    validTarget = true;
-														    break;
-													    case 3:
-														    characters[0].cure(characters[0], characters[3]);
-														    validTarget = true;
-														    break;
-													    default:
-														    std::cout << "Invalid target!\n";
-														    break;
-												    }
-											    }
-											    validAction = true;
-											    break;
-										    }
-									    default:
-										    std::cout << "Invalid action!\n";
-										    break;
-								    }
-							    }
-							    break;
-						    }
-						    // MONA's Turns
+                    int action = NULL;
+                    bool validAction = false;
+                    while (!validAction){
+                        std::cout << "What should JOKER do?\n";
+                        std::cout << "1. Blizzard\n";
+                        std::cout << "2. Cleave\n";
+                        std::cout << "3. Cure\n";
+                        //std::cin >> action;
+                        while (!action) {
+                            XEvent e = x11.getXNextEvent();
+                            action = check_keys2(&e);
+                        }
+                        std::cout << "checkKeys2 is " << action << std::endl;
+                        switch (action) {
+                            // Blizzard
+                            case 1: {
+                                    characters[0].blizzard(characters[0], boss[0]);
+                                    validAction = true;
+                                    break;
+                                }
+                                // Bash
+                            case 2: {
+                                    characters[0].cleave(characters[0], boss[0]);
+                                    validAction = true;
+                                    break;
+                                }
+                                // Cure
+                            case 3: {
+                                    int target = NULL;
+                                    bool validTarget = false;
+                                    while (!validTarget) {
+                                        std::cout << "Select a target:\n";
+                                        std::cout << "1. MONA\n";
+                                        std::cout << "2. PANTHER\n";
+                                        std::cout << "3. SKULL\n";
+                                        while (!target)
+                                        {
+                                            XEvent e = x11.getXNextEvent();
+                                            target = check_keys2(&e);
+                                        }
+                                        switch (target) {
+                                            case 1:
+                                                characters[0].cure(characters[0], characters[1]);
+                                                validTarget = true;
+                                                break;
+                                            case 2:
+                                                characters[0].cure(characters[0], characters[2]);
+                                                validTarget = true;
+                                                break;
+                                            case 3:
+                                                characters[0].cure(characters[0], characters[3]);
+                                                validTarget = true;
+                                                break;
+                                            default:
+                                                std::cout << "Invalid target!\n";
+                                                break;
+                                        }
+                                    }
+                                    validAction = true;
+                                    break;
+                                }
+                            default:
+                                std::cout << "Invalid action!\n";
+                                break;
+                        }
+                    }
+                    break;
+                }
+                // MONA's Turns
 				case MONA_ACTIONS: {
-							   // Implement MONA's action selection logic
-							   int action = NULL;
-							   bool validAction = false;
-							   while (!validAction){
-								   std::cout << "What should MONA do?\n";
-								   std::cout << "1. Tornado\n";
-								   std::cout << "2. Cure\n";
-								   std::cout << "3. Revive\n";
-								   while (!action)
-								   {
-									   XEvent e = x11.getXNextEvent();
-									   action = check_keys2(&e);
-								   }
+                    // Implement MONA's action selection logic
+                    int action = NULL;
+                    bool validAction = false;
+                    while (!validAction){
+                        std::cout << "What should MONA do?\n";
+                        std::cout << "1. Tornado\n";
+                        std::cout << "2. Cure\n";
+                        std::cout << "3. Revive\n";
+                        while (!action)
+                        {
+                            XEvent e = x11.getXNextEvent();
+                            action = check_keys2(&e);
+                        }
 
-								   switch (action)
-								   {
-								   case 1:
-								   {
-									   characters[1].tornado(characters[1], boss[0]);
-									   validAction = true;
-									   break;
-										   }
-									   case 2: {
-											   int target;
-											   bool validTarget = false;
-											   while (!validTarget) {
-												   std::cout << "Select a target:\n";
-												   std::cout << "1. JOKER\n";
-												   std::cout << "2. PANTHER\n";
-												   std::cout << "3. SKULL\n";
-												    while (!target)
-													{
-														XEvent e = x11.getXNextEvent();
-														target = check_keys2(&e);
-													}
-												   switch (target) {
-													   case 1:
-														   characters[1].cure(characters[1], characters[0]);
-														   validTarget = true;
-														   break;
-													   case 2:
-														   characters[1].cure(characters[1], characters[2]); 
-														   validTarget = true;
-														   break;
-													   case 3:
-														   characters[1].cure(characters[1], characters[3]);
-														   validTarget = true;
-														   break;
-													   default:
-														   std::cout << "Invalid target!\n";
-														   break;
-												   }
-											   }
-											   validAction = true;
-											   break;
-										   }
-									   case 3: {
-											   int target = NULL;
-											   bool validTarget = false;
-											   while (!validTarget) {
-												   std::cout << "Select a target:\n";
-												   std::cout << "1. JOKER\n";
-												   std::cout << "2. PANTHER\n";
-												   std::cout << "3. SKULL\n";
-												   while (!target)
-													{
-														XEvent e = x11.getXNextEvent();
-														target = check_keys2(&e);
-													}
-												   switch (target) {
-													   case 1:
-														   characters[1].revive(characters[1], characters[0]);
-														   validTarget = true;
-														   break;
-													   case 2:
-														   characters[1].revive(characters[1], characters[2]); 
-														   validTarget = true;
-														   break;
-													   case 3:
-														   characters[1].revive(characters[1], characters[3]);
-														   validTarget = true;
-														   break;
-													   default:
-														   std::cout << "Invalid target!\n";
-														   break;
-												   }
-											   }
-											   validAction = true;
-											   break;
-										   }
-									   default:
-										   std::cout << "Invalid action!\n";
-										   break;
-									   }
-							   }
-							   break;
-						   }
-						   // PANTHER's Turns
+                        switch (action)
+                        {
+                        case 1:
+                        {
+                            characters[1].tornado(characters[1], boss[0]);
+                            validAction = true;
+                            break;
+                                }
+                            case 2: {
+                                    int target = NULL;
+                                    bool validTarget = false;
+                                    while (!validTarget) {
+                                        std::cout << "Select a target:\n";
+                                        std::cout << "1. JOKER\n";
+                                        std::cout << "2. PANTHER\n";
+                                        std::cout << "3. SKULL\n";
+                                        while (!target)
+                                        {
+                                            XEvent e = x11.getXNextEvent();
+                                            target = check_keys2(&e);
+                                        }
+                                        switch (target) {
+                                            case 1:
+                                                characters[1].cure(characters[1], characters[0]);
+                                                validTarget = true;
+                                                break;
+                                            case 2:
+                                                characters[1].cure(characters[1], characters[2]); 
+                                                validTarget = true;
+                                                break;
+                                            case 3:
+                                                characters[1].cure(characters[1], characters[3]);
+                                                validTarget = true;
+                                                break;
+                                            default:
+                                                std::cout << "Invalid target!\n";
+                                                break;
+                                        }
+                                    }
+                                    validAction = true;
+                                    break;
+                                }
+                            case 3: {
+                                    int target = NULL;
+                                    bool validTarget = false;
+                                    while (!validTarget) {
+                                        std::cout << "Select a target:\n";
+                                        std::cout << "1. JOKER\n";
+                                        std::cout << "2. PANTHER\n";
+                                        std::cout << "3. SKULL\n";
+                                        while (!target)
+                                        {
+                                            XEvent e = x11.getXNextEvent();
+                                            target = check_keys2(&e);
+                                        }
+                                        switch (target) {
+                                            case 1:
+                                                characters[1].revive(characters[1], characters[0]);
+                                                validTarget = true;
+                                                break;
+                                            case 2:
+                                                characters[1].revive(characters[1], characters[2]); 
+                                                validTarget = true;
+                                                break;
+                                            case 3:
+                                                characters[1].revive(characters[1], characters[3]);
+                                                validTarget = true;
+                                                break;
+                                            default:
+                                                std::cout << "Invalid target!\n";
+                                                break;
+                                        }
+                                    }
+                                    validAction = true;
+                                    break;
+                                }
+                            default:
+                                std::cout << "Invalid action!\n";
+                                break;
+                            }
+                    }
+                    break;
+                }
+                // PANTHER's Turns
 				case PANTHER_ACTIONS: {
-							      int action = NULL;
-							      bool validAction = false;
-							      while (!validAction){
-								      std::cout << "What should PANTHER do?\n";
-								      std::cout << "1. SOLAR\n";
-								      std::cout << "2. SHOT\n";
-									  std::cout << "3. Cure\n";
-									  while (!action)
-									  {
-										  XEvent e = x11.getXNextEvent();
-										  action = check_keys2(&e);
-									  }
+                    int action = NULL;
+                    bool validAction = false;
+                    while (!validAction){
+                        std::cout << "What should PANTHER do?\n";
+                        std::cout << "1. SOLAR\n";
+                        std::cout << "2. SHOT\n";
+                        std::cout << "3. Cure\n";
+                        while (!action)
+                        {
+                            XEvent e = x11.getXNextEvent();
+                            action = check_keys2(&e);
+                        }
 
-									  switch (action)
-									  {
-									  case 1:
-									  {
-										  characters[2].solar(characters[2], boss[0]);
-										  validAction = true;
-										  break;
-										      }
-									      case 2: {
-											      characters[2].shot(characters[2], boss[0]);
-											      validAction = true;
-											      break;
-										      }
-									      case 3: {
-											      int target = NULL;
-											      bool validTarget = false;
-											      while (!validTarget) {
-												      std::cout << "Select a target:\n";
-												      std::cout << "1. JOKER\n";
-												      std::cout << "2. MONA\n";
-													  std::cout << "3. SKULL\n";
-													  while (!target)
-													  {
-														  XEvent e = x11.getXNextEvent();
-														  target = check_keys2(&e);
-													  }
-													  switch (target)
-													  {
-													  case 1:
-														  characters[2].cure(characters[2], characters[0]);
-														  validTarget = true;
-														  break;
-													  case 2:
-														  characters[2].cure(characters[2], characters[1]);
-														  validTarget = true;
-														  break;
-													  case 3:
-														  characters[2].cure(characters[2], characters[3]);
-														  validTarget = true;
-														  break;
-													  default:
-														  std::cout << "Invalid target!\n";
-														  break;
-													  }
-												  }
-											      validAction = true;
-											      break;
-										      }
-									      default:
-										      std::cout << "Invalid action!\n";
-										      break;
-										  }
-								  }
-							      break;
-						      }
-						      // SKULL's Turns
+                        switch (action)
+                        {
+                        case 1:
+                        {
+                            characters[2].solar(characters[2], boss[0]);
+                            validAction = true;
+                            break;
+                                }
+                            case 2: {
+                                    characters[2].shot(characters[2], boss[0]);
+                                    validAction = true;
+                                    break;
+                                }
+                            case 3: {
+                                    int target = NULL;
+                                    bool validTarget = false;
+                                    while (!validTarget) {
+                                        std::cout << "Select a target:\n";
+                                        std::cout << "1. JOKER\n";
+                                        std::cout << "2. MONA\n";
+                                        std::cout << "3. SKULL\n";
+                                        while (!target)
+                                        {
+                                            XEvent e = x11.getXNextEvent();
+                                            target = check_keys2(&e);
+                                        }
+                                        switch (target)
+                                        {
+                                        case 1:
+                                            characters[2].cure(characters[2], characters[0]);
+                                            validTarget = true;
+                                            break;
+                                        case 2:
+                                            characters[2].cure(characters[2], characters[1]);
+                                            validTarget = true;
+                                            break;
+                                        case 3:
+                                            characters[2].cure(characters[2], characters[3]);
+                                            validTarget = true;
+                                            break;
+                                        default:
+                                            std::cout << "Invalid target!\n";
+                                            break;
+                                        }
+                                    }
+                                    validAction = true;
+                                    break;
+                                }
+                            default:
+                                std::cout << "Invalid action!\n";
+                                break;
+                            }
+                    }
+                    break;
+                }
+                // SKULL's Turns
 				case SKULL_ACTIONS: {
-							    int action = NULL;
-							    bool validAction = false;
-							    while (!validAction){
-								    std::cout << "What should SKULL do?\n";
-								    std::cout << "1. THUNDER\n";
-								    std::cout << "2. CLEAVE\n";
-									std::cout << "3. BASH\n";
-									while (!action)
-									{
-										XEvent e = x11.getXNextEvent();
-										action = check_keys2(&e);
-									}
+                    int action = NULL;
+                    bool validAction = false;
+                    while (!validAction){
+                        std::cout << "What should SKULL do?\n";
+                        std::cout << "1. THUNDER\n";
+                        std::cout << "2. CLEAVE\n";
+                        std::cout << "3. BASH\n";
+                        while (!action)
+                        {
+                            XEvent e = x11.getXNextEvent();
+                            action = check_keys2(&e);
+                        }
 
-									switch (action)
-									{
-									case 1:
-									{
-										characters[3].thunder(characters[3], boss[0]);
-										validAction = true;
-										break;
-									}
-										case 2: {
-											    characters[3].cleave(characters[3], boss[0]);
-											    validAction = true;
-											    break;
-										    }
-									    case 3: {
-											    characters[3].bash(characters[3], boss[0]);
-											    validAction = true;
-											    break;
-										    }
-									    default:
-										    std::cout << "Invalid action!\n";
-										    break;
-										}
-								}
-							    break;
-						    }
-						    // KAMOSHIDA's Turns
+                        switch (action)
+                        {
+                        case 1:
+                        {
+                            characters[3].thunder(characters[3], boss[0]);
+                            validAction = true;
+                            break;
+                        }
+                            case 2: {
+                                    characters[3].cleave(characters[3], boss[0]);
+                                    validAction = true;
+                                    break;
+                                }
+                            case 3: {
+                                    characters[3].bash(characters[3], boss[0]);
+                                    validAction = true;
+                                    break;
+                                }
+                            default:
+                                std::cout << "Invalid action!\n";
+                                break;
+                            }
+                    }
+                    break;
+                }
+                // KAMOSHIDA's Turns
 				case KAMOSHIDA_ACTIONS:
-						    break;
+                    int action = NULL;
+                    bool validAction = false;
+                    while (!validAction){
+                        std::cout << "KAMOSHIDA's TURN\n";
+                        while (!action)
+                        {
+                            XEvent e = x11.getXNextEvent();
+                            action = check_keys2(&e);
+                        }
+
+                        switch (action)
+                        {
+                            //Heal Himself
+                            case 1: {
+                                boss[0].cure(boss[0], boss[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 2: {
+                                boss[0].vAssault(boss[0], characters[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 3: {
+                                boss[0].gKnife(boss[0], characters[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 4: {
+                                boss[0].solar(boss[0], characters[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 5: {
+                                boss[0].tornado(boss[0], characters[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 6: {
+                                boss[0].thunder(boss[0], characters[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 7: {
+                                boss[0].blizzard(boss[0], characters[0]);
+                                validAction = true;
+                                break;
+                            }
+                            case 8: {
+                                boss[0].almighty(boss[0], characters);
+                                validAction = true;
+                                break;
+                            }
+                        }
+                break;
 			}
 		}
-
+        }
 
 };
 
@@ -1217,19 +1341,14 @@ int check_keys(XEvent *e)
 		int key = XLookupKeysym(&e->xkey, 0);
 		switch (key) {
 			case XK_1: 
-				characters[0].selectAction(characters, boss, 0);
 				break;
 			case XK_2:
-				characters[1].selectAction(characters, boss, 1);
 				break;
 			case XK_3:
-				characters[2].selectAction(characters, boss, 2);
 				break;
 			case XK_4:
-				characters[3].selectAction(characters, boss, 3);
 				break;
 			case XK_5:
-				boss[0].almighty(boss[0], characters);
 				break;
 			case XK_6:
 				break;
