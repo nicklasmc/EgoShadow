@@ -138,96 +138,117 @@ class Global {
     Texture city;
 
 
-    Global() {
-      //xres=1024, yres=1024;
-      xres=2040, yres=2040;
-      show_credits = 0;
-    }
+		Global() {
+			//xres=1024, yres=1024;
+			xres=1080, yres=720;
+			show_credits = 0;
+		}
 } g;
 
+class BossHealthBar { 
+	public:
+		float max_hp;
+		float current_health;
+		float previous_health;
+		float hb_length;
+		float percentage;
+		int hb_max_length;
+		int hb_container_length;
+	
+	
+	BossHealthBar() {
+		hb_container_length = g.xres/2;
+		hb_max_length = g.xres/2 - 10;
+		max_hp = MAX_BOSS_HP;
+		current_health = MAX_BOSS_HP;
+		previous_health = current_health;
+		percentage =  current_health / max_hp;
+		hb_length = hb_max_length * percentage;
 
+	}
+} bossBar;
 
 
 
 class X11_wrapper {
-  public:
-    Global *global;
-    Display *dpy;
-    Window win;
-    GLXContext glc;
-    X11_wrapper() {
-      GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-      //GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, None };
-      setup_screen_res(800, 600);
-      dpy = XOpenDisplay(NULL);
-      if(dpy == NULL) {
-        printf("\n\tcannot connect to X server\n\n");
-        exit(EXIT_FAILURE);
-      }
-      Window root = DefaultRootWindow(dpy);
-      XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
-      if(vi == NULL) {
-        printf("\n\tno appropriate visual found\n\n");
-        exit(EXIT_FAILURE);
-      } 
-      Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
-      XSetWindowAttributes swa;
-      swa.colormap = cmap;
-      swa.event_mask =
-        ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask |
-        ButtonPressMask | ButtonReleaseMask |
-        StructureNotifyMask | SubstructureNotifyMask;
-      win = XCreateWindow(dpy, root, 0, 0, g.xres, g.yres, 0,
-          vi->depth, InputOutput, vi->visual,
-          CWColormap | CWEventMask, &swa);
-      set_title();
-      glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
-      glXMakeCurrent(dpy, win, glc);
-    }
-    void cleanupXWindows() {
-      XDestroyWindow(dpy, win);
-      XCloseDisplay(dpy);
-    }
-    void setup_screen_res(const int w, const int h) {
-      g.xres = w;
-      g.yres = h;
-    }
-    void reshape_window(int width, int height) {
-      //window has been resized.
-      setup_screen_res(width, height);
-      glViewport(0, 0, (GLint)width, (GLint)height);
-      glMatrixMode(GL_PROJECTION); glLoadIdentity();
-      glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-      glOrtho(0, g.xres, 0, g.yres, -1, 1);
-      set_title();
-    }
-    void set_title() {
-      //Set the window title bar.
-      XMapWindow(dpy, win);
-      XStoreName(dpy, win, "4490 Game Dev");
-    }
-    bool getXPending() {
-      return XPending(dpy);
-    }
-    XEvent getXNextEvent() {
-      XEvent e;
-      XNextEvent(dpy, &e);
-      return e;
-    }
-    void swapBuffers() {
-      glXSwapBuffers(dpy, win);
-    }
-    void check_resize(XEvent *e) {
-      //The ConfigureNotify is sent by the
-      //server if the window is resized.
-      if (e->type != ConfigureNotify)
-        return;
-      XConfigureEvent xce = e->xconfigure;
-      if (xce.width != g.xres || xce.height != g.yres) {
-        //Window size did change.
-        reshape_window(xce.width, xce.height);
-      }
-    }
+	public:
+		Global *global;
+		Display *dpy;
+		Window win;
+		GLXContext glc;
+		X11_wrapper() {
+			GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+			//GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, None };
+			setup_screen_res(1080, 720);
+			dpy = XOpenDisplay(NULL);
+			if(dpy == NULL) {
+				printf("\n\tcannot connect to X server\n\n");
+				exit(EXIT_FAILURE);
+			}
+			Window root = DefaultRootWindow(dpy);
+			XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
+			if(vi == NULL) {
+				printf("\n\tno appropriate visual found\n\n");
+				exit(EXIT_FAILURE);
+			} 
+			Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
+			XSetWindowAttributes swa;
+			swa.colormap = cmap;
+			swa.event_mask =
+				ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask |
+				ButtonPressMask | ButtonReleaseMask |
+				StructureNotifyMask | SubstructureNotifyMask;
+			win = XCreateWindow(dpy, root, 0, 0, g.xres, g.yres, 0,
+					vi->depth, InputOutput, vi->visual,
+					CWColormap | CWEventMask, &swa);
+			set_title();
+			glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
+			glXMakeCurrent(dpy, win, glc);
+		}
+		void cleanupXWindows() {
+			XDestroyWindow(dpy, win);
+			XCloseDisplay(dpy);
+		}
+		void setup_screen_res(const int w, const int h) {
+			g.xres = w;
+			g.yres = h;
+		}
+		void reshape_window(int width, int height) {
+			//window has been resized.
+			setup_screen_res(width, height);
+			glViewport(0, 0, (GLint)width, (GLint)height);
+			glMatrixMode(GL_PROJECTION); glLoadIdentity();
+			glMatrixMode(GL_MODELVIEW); glLoadIdentity();
+			glOrtho(0, g.xres, 0, g.yres, -1, 1);
+			set_title();
+		}
+		void set_title() {
+			//Set the window title bar.
+			XMapWindow(dpy, win);
+			XStoreName(dpy, win, "4490 Game Dev");
+		}
+		bool getXPending() {
+			return XPending(dpy);
+		}
+		XEvent getXNextEvent() {
+			XEvent e;
+			XNextEvent(dpy, &e);
+			return e;
+		}
+		void swapBuffers() {
+			glXSwapBuffers(dpy, win);
+		}
+		void check_resize(XEvent *e) {
+			//The ConfigureNotify is sent by the
+			//server if the window is resized.
+			if (e->type != ConfigureNotify)
+				return;
+			XConfigureEvent xce = e->xconfigure;
+			if (xce.width != g.xres || xce.height != g.yres) {
+				//Window size did change.
+				reshape_window(xce.width, xce.height);
+			}
+		}
 } x11;
 
 
@@ -1220,6 +1241,8 @@ void display_startup();
 void display_hp();
 int* generate_initiative(int);
 void render_screen();
+void display_bossHealthBar();
+void reduce_bossHealthBar();
 
 int* generate_initiative(int arr[]) {
   std::random_shuffle(&arr[0], &arr[5]);
@@ -1486,38 +1509,41 @@ int check_keys2(XEvent *e)
 //Added Play Game - Nicklas Chiang
 void play_game()
 {
-  srand(time(NULL));
-  int done = 0;
-  // generate initiative
-  generate_initiative(game.gameOrder);
-  // -- Print Initiative For Debugging -- //
-  for (int i = 0; i < 5; i++) {
-    std::cout << game.gameOrder[i] << std::endl;
-  }
-  // -- ----------------------------- -- //
-  int i = 0;
-  while (!done) {
-    while (x11.getXPending()) {
-      XEvent e = x11.getXNextEvent();
-      x11.check_resize(&e);
-      check_mouse(&e);
-      done = check_keys(&e);
-    }
-    // Combat sequence
-    // Simulate combat rounds
-    game.currentActor = game.gameOrder[i];
-    //game.currentActor = 4;
-    game.turnDone = 0;
-    while(!game.turnDone){
-      render_actual();
-      render();
-      physics();
-      x11.swapBuffers();
-    }
-    i++;
-    if (i == 6) i = 0;
-  }
-  cleanup_fonts();
+	srand(time(NULL));
+	int done = 0;
+	// generate initiative
+	generate_initiative(game.gameOrder);
+	// -- Print Initiative For Debugging -- //
+	for (int i = 0; i < 5; i++) {
+		std::cout << game.gameOrder[i] << std::endl;
+	}
+	// -- ----------------------------- -- //
+	int i = 0;
+	while (!done) {
+		while (x11.getXPending()) {
+			XEvent e = x11.getXNextEvent();
+			x11.check_resize(&e);
+			check_mouse(&e);
+			done = check_keys(&e);
+		}
+		// Combat sequence
+		// Simulate combat rounds
+		// for (int i = 0; i < 5; i++) {
+		// 	std::cout << "Game order: " << game.gameOrder[i] << std::endl;
+		// }
+		game.currentActor = game.gameOrder[i];
+		//game.currentActor = 4;
+		game.turnDone = 0;
+		while(!game.turnDone){
+			render_actual();
+			render();
+			physics();
+			x11.swapBuffers();
+		}
+		i++;
+		if (i == 5) i = 0;
+	}
+	cleanup_fonts();
 }
 
 //Function to display credits
@@ -1590,8 +1616,8 @@ void display_game_over() {
 void display_hp()
 {
 
-  Rect r;
-  unsigned int c = 0xFFFFFF;
+	Rect r;
+	unsigned int c = BLACK;
 
   // Set the position for displaying HP in the top right corner
   r.bot = g.yres - 20;
@@ -1699,26 +1725,65 @@ void display_battleMenu() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  // main container border
-  glColor3ub(0, 24, 62);
-  glBegin(GL_QUADS); 
-  glVertex2i(0, g.yres/4); // topleft: (x,y)
-  glVertex2i(g.xres, g.yres/4); // topright: (x,y)
-  glVertex2i(g.xres, 0); // botright: (x,y)
-  glVertex2i(0, 0); // botleft: (x,y)
-  glEnd();
-  // main container inner
-  glColor3ub(255,255,255);
-  glBegin(GL_QUADS); 
-  glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
-  glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
-  glVertex2i(g.xres - 10, 10); // botright: (x,y)
-  glVertex2i(10,10); // botleft: (x,y)
-  glEnd();
+	// main container border
+	glColor3ub(0, 24, 62);
+	glBegin(GL_QUADS); 
+	glVertex2i(0, g.yres/4); // topleft: (x,y)
+	glVertex2i(g.xres, g.yres/4); // topright: (x,y)
+	glVertex2i(g.xres, 0); // botright: (x,y)
+	glVertex2i(0, 0); // botleft: (x,y)
+	glEnd();
+	// main container inner
+	glColor3ub(255,255,255);
+	glBegin(GL_QUADS); 
+	glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
+	glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
+	glVertex2i(g.xres - 10, 10); // botright: (x,y)
+	glVertex2i(10,10); // botleft: (x,y)
+	glDisable(GL_BLEND);
+	glEnd();
 
   // glXSwapBuffers(x11.dpy, x11.win);
   // usleep(1000);
   // std::cout << "Battle Menu init" << std::endl;
+}
+
+void display_bossHealthBar() {
+	glEnable(GL_BLEND);
+	// boss health bar container
+	glColor3ub(0, 0, 0);
+	glBegin(GL_QUADS); 
+	glVertex2i(20, g.yres-40); // topleft: (x,y)
+	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
+	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
+	glVertex2i(20, g.yres-80); // botleft: (x,y)
+	glEnd();
+
+
+	bossBar.current_health = boss[0].hp;
+	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
+	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
+	// std::cout << boss[0].max_hp << std::endl;
+	// std::cout << boss[0].hp << std::endl;
+	// std::cout << g.xres/2 - 10 << std::endl;
+	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
+	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
+	
+
+	// healthbar
+	glBegin(GL_QUADS); 
+	glColor3ub(238, 75, 62);
+	glVertex2i(32, g.yres-45); // topleft: (x,y)
+	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
+	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
+	glVertex2i(32, g.yres-75); // botleft: (x,y)
+	glEnd();
+	glDisable(GL_BLEND);
+
+}
+
+void reduce_bossHealthBar() {
+		bossBar.previous_health = bossBar.previous_health - 2.0;
 }
 
 //Function to Display Main Menu
@@ -1895,29 +1960,41 @@ void physics()
 
 
 void render_actual() {
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_COLOR_BUFFER_BIT);
-  glColor3f(1.0, 1.0, 1.0);
-  display_battleMenu();
-  display_hp();
+        glClearColor(1.0, 1.0, 1.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glColor3f(1.0, 1.0, 1.0);
+        display_battleMenu();
+		display_hp();
 
-  x11.swapBuffers();
+		display_bossHealthBar();
+     
+		
+		
+
+		x11.swapBuffers();
 }
 void render()
 {
-  /*
-     glClearColor(0.0, 0.0, 0.0, 0.0);
-     glClear(GL_COLOR_BUFFER_BIT);
-     glColor3f(1.0, 1.0, 1.0);
-     display_battleMenu();
-     display_hp();
-     */
-  Rect r;
-  // Set the position for displaying HP in the top left corner
-  r.bot = g.yres - 20;
-  r.left = 20;
-  r.center = 0;
-  // display_game_over	
+	/*
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	display_battleMenu();
+	display_hp();
+	*/
+	Rect r;
+	// Set the position for displaying HP in the top left corner
+	r.bot = g.yres - 20;
+	r.left = 20;
+	r.center = 0;
+	
+	// display_game_over
+	while (bossBar.current_health < bossBar.previous_health)
+	{
+		reduce_bossHealthBar();
+		display_bossHealthBar();
+		x11.swapBuffers();
+	}
 
   if (game.currentActor == 0) {
     characters[0].selectAction(characters, boss, 0);
