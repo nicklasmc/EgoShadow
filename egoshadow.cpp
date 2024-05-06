@@ -116,7 +116,21 @@ class Image {
       unlink(ppmname);
     }
 };
-Image img[9] = {"fixed_titlecard.png", "solaire.png", "abyss.png", "ds.jpg", "mona2.png", "joker.png", "pantherfixed.png", "skullfixed.png", "arsene.png"};
+Image img[13] = {
+  "fixed_titlecard.png", 
+  "solaire.png", 
+  "abyss.png", 
+  "ds.jpg", 
+  "mona2.png", 
+  "joker.png", 
+  "pantherfixed.png", 
+  "skullfixed.png", 
+  "arsene.png",
+  "monahead.png",
+  "jokerhead.png",
+  "pantherhead.png",
+  "skullhead.png"
+  };
 
 class Texture {
   public:
@@ -142,6 +156,10 @@ class Global {
     Texture skull;
     Texture arsene;
 
+    Texture monahead;
+    Texture jokerhead;
+    Texture pantherhead;
+    Texture skullhead;
 
 		Global() {
 			//xres=1024, yres=1024;
@@ -1209,25 +1227,51 @@ class gameLogic {
 } game;
 
 class heroSprite {
-  public:
-  int s1x, s2x, s3x, s4x;
-  int s1y, s2y, s3y, s4y;
+public:
+  int s1x, s2x, s3x, s4x; // sprite1x, sprite2x, etc. for x coords
+  int s1y, s2y, s3y, s4y; // sprite1y, sprite2y, etc. for y coords
   int width;
   int height;
-  heroSprite() {
-    width = ((g.xres/2) / 4) - 10;
-    s1x = (g.xres/2) + 10;
+  heroSprite()
+  {
+    width = ((g.xres / 2) / 4) - 10;
+    s1x = (g.xres / 2) + 10;
     s2x = s1x + width;
     s3x = s2x + width;
     s4x = s3x + width;
 
-    height = g.yres/4 - 10;
+    height = g.yres / 4 - 10;
     s1y = height;
     s2y = height;
     s3y = height;
     s4y = height;
   }
 } hs;
+
+class heroHeads {
+public:
+  int width, height, gap;
+  int h1x, h2x, h3x, h4x; // head1x, head2x, etc. for x coords
+  int h1y, h2y, h3y, h4y; // head1y, head2y, etc. for y coords
+  heroHeads()
+  {
+    width = 75;
+    height = 75;
+    gap = 40;
+    h1x = (g.xres) - width - 10;
+    h2x = h1x;
+    h3x = h2x;
+    h4x = h3x;
+
+    h1y = g.yres - height - 10;
+    h2y = h1y - height - gap;
+    h3y = h2y - height - gap;
+    h4y = h3y - height - gap;
+  }
+} hh;
+
+
+
 
 Character characters[4] = {
   Character("JOKER", JOKER_HP, JOKER_HP, JOKER_SP, JOKER_SP, "ice", "fire", Character::JOKER_ACTIONS, false),
@@ -1266,10 +1310,13 @@ int* generate_initiative(int);
 void render_screen();
 void display_bossHealthBar();
 void reduce_bossHealthBar();
+
+
 void render_monaSprite();
 void render_jokerSprite();
 void render_pantherSprite();
 void render_skullSprite();
+void render_heroHeads();
 void render_boss();
 
 int* generate_initiative(int arr[]) {
@@ -1340,24 +1387,26 @@ unsigned char *buildAlphaData(Image *img)
 
 void init_opengl(void)
 {
-  //OpenGL initialization
+  // OpenGL initialization
   glViewport(0, 0, g.xres, g.yres);
-  //Initialize matrices
-  glMatrixMode(GL_PROJECTION); glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-  //This sets 2D mode (no perspective)
+  // Initialize matrices
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  // This sets 2D mode (no perspective)
   glOrtho(0, g.xres, 0, g.yres, -1, 1);
-  //Clear the screen
+  // Clear the screen
   glClearColor(1.0, 1.0, 1.0, 1.0);
-  //glClear(GL_COLOR_BUFFER_BIT);
-  //Do this to allow texture maps
+  // glClear(GL_COLOR_BUFFER_BIT);
+  // Do this to allow texture maps
   glEnable(GL_TEXTURE_2D);
   initialize_fonts();
   //
-  //load the images file into a ppm structure.
+  // load the images file into a ppm structure.
   //
   // BACKGROUND GENERATION
-  //create opengl texture elements
+  // create opengl texture elements
   /*
      g.tex.backImage = &img[0];
      glGenTextures(1, &g.tex.backTexture);
@@ -1376,52 +1425,50 @@ void init_opengl(void)
 
   /* -------- WORKING PNG VERSION -----------*/
   unsigned char *data0 = buildAlphaData(&img[0]);
-  //unsigned char *data2 = new unsigned char[h * w * 4];
+  // unsigned char *data2 = new unsigned char[h * w * 4];
   g.tex.backImage = &img[0];
   glGenTextures(1, &g.tex.backTexture);
   int w = g.tex.backImage->width;
   int h = g.tex.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, data0);
-  //g.tex.xc[0] = 1.0;
-  //g.tex.xc[1] = 0.0;
-  //g.tex.yc[0] = 1.0;
-  //g.tex.yc[1] = 0.0;
+               GL_RGBA, GL_UNSIGNED_BYTE, data0);
+  // g.tex.xc[0] = 1.0;
+  // g.tex.xc[1] = 0.0;
+  // g.tex.yc[0] = 1.0;
+  // g.tex.yc[1] = 0.0;
   /*-----------------------------------------*/
 
   unsigned char *data1 = buildAlphaData(&img[1]);
-  //unsigned char *data2 = new unsigned char[h * w * 4];
+  // unsigned char *data2 = new unsigned char[h * w * 4];
   g.solaire.backImage = &img[1];
   glGenTextures(1, &g.solaire.backTexture);
   w = g.solaire.backImage->width;
   h = g.solaire.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, data1);
+               GL_RGBA, GL_UNSIGNED_BYTE, data1);
   g.solaire.xc[0] = 0.0;
   g.solaire.xc[1] = 1.0;
   g.solaire.yc[0] = 0.0;
   g.solaire.yc[1] = 1.0;
 
-
-
   unsigned char *data2 = buildAlphaData(&img[2]);
   // abyss
-  //unsigned char *data2 = new unsigned char[h * w * 4]; 
+  // unsigned char *data2 = new unsigned char[h * w * 4];
   g.abyss.backImage = &img[2];
   glGenTextures(1, &g.abyss.backTexture);
   w = g.abyss.backImage->width;
   h = g.abyss.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, data2);
+               GL_RGBA, GL_UNSIGNED_BYTE, data2);
   g.abyss.xc[0] = 0.0;
   g.abyss.xc[1] = 1.0;
   g.abyss.yc[0] = 0.0;
@@ -1433,92 +1480,146 @@ void init_opengl(void)
   w = g.city.backImage->width;
   h = g.city.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.city.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.city.backImage->data);
   g.city.xc[0] = 0.0;
   g.city.xc[1] = 1.0;
   g.city.yc[0] = 0.0;
   g.city.yc[1] = 1.0;
 
-//mona
+  // mona
   g.mona.backImage = &img[4];
   glGenTextures(1, &g.mona.backTexture);
   w = g.mona.backImage->width;
   h = g.mona.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.mona.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.mona.backImage->data);
   g.mona.xc[0] = 0.0;
   g.mona.xc[1] = 1.0;
   g.mona.yc[0] = 0.0;
   g.mona.yc[1] = 1.0;
 
-  //joker
-    g.joker.backImage = &img[5];
+  // joker
+  g.joker.backImage = &img[5];
   glGenTextures(1, &g.joker.backTexture);
   w = g.joker.backImage->width;
   h = g.joker.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.joker.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.joker.backImage->data);
   g.joker.xc[0] = 0.0;
   g.joker.xc[1] = 1.0;
   g.joker.yc[0] = 0.0;
   g.joker.yc[1] = 1.0;
 
-   //panther
+  // panther
   g.panther.backImage = &img[6];
   glGenTextures(1, &g.panther.backTexture);
   w = g.panther.backImage->width;
   h = g.panther.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.panther.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.panther.backImage->data);
   g.panther.xc[0] = 0.0;
   g.panther.xc[1] = 1.0;
   g.panther.yc[0] = 0.0;
   g.panther.yc[1] = 1.0;
 
-     //skull
-    g.skull.backImage = &img[7];
+  // skull
+  g.skull.backImage = &img[7];
   glGenTextures(1, &g.skull.backTexture);
   w = g.skull.backImage->width;
   h = g.skull.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.skull.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.skull.backImage->data);
   g.skull.xc[0] = 0.0;
   g.skull.xc[1] = 1.0;
   g.skull.yc[0] = 0.0;
   g.skull.yc[1] = 1.0;
 
-       //arsene
-    g.arsene.backImage = &img[8];
+  // arsene
+  g.arsene.backImage = &img[8];
   glGenTextures(1, &g.arsene.backTexture);
   w = g.arsene.backImage->width;
   h = g.arsene.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.arsene.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.arsene.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.arsene.backImage->data);
   g.arsene.xc[0] = 0.0;
   g.arsene.xc[1] = 1.0;
   g.arsene.yc[0] = 0.0;
   g.arsene.yc[1] = 1.0;
 
-}
+  g.monahead.backImage = &img[9];
+  glGenTextures(1, &g.monahead.backTexture);
+  w = g.monahead.backImage->width;
+  h = g.monahead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.monahead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.monahead.backImage->data);
+  g.monahead.xc[0] = 0.0;
+  g.monahead.xc[1] = 1.0;
+  g.monahead.yc[0] = 0.0;
+  g.monahead.yc[1] = 1.0;
 
+  g.jokerhead.backImage = &img[10];
+  glGenTextures(1, &g.jokerhead.backTexture);
+  w = g.jokerhead.backImage->width;
+  h = g.jokerhead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.jokerhead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.jokerhead.backImage->data);
+  g.jokerhead.xc[0] = 0.0;
+  g.jokerhead.xc[1] = 1.0;
+  g.jokerhead.yc[0] = 0.0;
+  g.jokerhead.yc[1] = 1.0;
+
+  g.pantherhead.backImage = &img[11];
+  glGenTextures(1, &g.pantherhead.backTexture);
+  w = g.pantherhead.backImage->width;
+  h = g.pantherhead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.pantherhead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.pantherhead.backImage->data);
+  g.pantherhead.xc[0] = 0.0;
+  g.pantherhead.xc[1] = 1.0;
+  g.pantherhead.yc[0] = 0.0;
+  g.pantherhead.yc[1] = 1.0;
+
+  g.skullhead.backImage = &img[12];
+  glGenTextures(1, &g.skullhead.backTexture);
+  w = g.skullhead.backImage->width;
+  h = g.skullhead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.skullhead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.skullhead.backImage->data);
+  g.skullhead.xc[0] = 0.0;
+  g.skullhead.xc[1] = 1.0;
+  g.skullhead.yc[0] = 0.0;
+  g.skullhead.yc[1] = 1.0;
+}
 
 void init() {
 
@@ -1830,16 +1931,16 @@ void display_battleMenu() {
 	glColor3ub(0, 24, 62);
 	glBegin(GL_QUADS); 
 	glVertex2i(0, g.yres/4); // topleft: (x,y)
-	glVertex2i(g.xres/2 + 10, g.yres/4); // topright: (x,y)
-	glVertex2i(g.xres/2 + 10, 0); // botright: (x,y)
+	glVertex2i(g.xres + 10, g.yres/4); // topright: (x,y)
+	glVertex2i(g.xres + 10, 0); // botright: (x,y)
 	glVertex2i(0, 0); // botleft: (x,y)
 	glEnd();
 	// main container inner
 	glColor3ub(255,255,255);
 	glBegin(GL_QUADS); 
 	glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
-	glVertex2i(g.xres/2, (g.yres/4) - 10); // topright: (x,y)
-	glVertex2i(g.xres/2, 10); // botright: (x,y)
+	glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
+	glVertex2i(g.xres - 10, 10); // botright: (x,y)
 	glVertex2i(10,10); // botleft: (x,y)
 	glDisable(GL_BLEND);
 	glEnd();
@@ -1910,7 +2011,7 @@ void display_menu() {
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(0, 0, 0, 1);
   // REMOVE TO SEE INTRO
-  g.introDone = 0;
+  g.introDone = 1;
   if (!g.introDone) {
     while (elapsedTime < introDuration) {
       now = time(NULL);
@@ -2060,6 +2161,167 @@ void physics()
 {
 }
 
+void render_heroHeads()
+{
+  glEnable(GL_TEXTURE_2D);
+
+  // ====================== Mona ======================
+  glBindTexture(GL_TEXTURE_2D, g.monahead.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h1x + hh.width, hh.h1y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h1x + hh.width, hh.h1y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h1x, hh.h1y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h1x, hh.h1y + hh.height);
+  glEnd();
+
+  // health bar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h1x + hh.width, hh.h1y - 20); // botright
+  glVertex2i(hh.h1x + hh.width, hh.h1y - 5);  // top right
+  glVertex2i(hh.h1x, hh.h1y - 5);             // top left
+  glVertex2i(hh.h1x, hh.h1y - 20);            // bot left
+  glEnd();
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(hh.h1x + hh.width - 2, hh.h1y - 18); // botright
+  glVertex2i(hh.h1x + hh.width - 2, hh.h1y - 7);  // top right
+  glVertex2i(hh.h1x + 2, hh.h1y - 7);             // top left
+  glVertex2i(hh.h1x + 2, hh.h1y - 18);            // bot left
+  glEnd();
+  // ==================================================
+
+  glColor3f(1.0, 1.0, 1.0);
+
+  // ====================== Joker ======================
+  glBindTexture(GL_TEXTURE_2D, g.jokerhead.backTexture);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h2x + hh.width, hh.h2y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h2x + hh.width, hh.h2y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h2x, hh.h2y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h2x, hh.h2y + hh.height);
+  glEnd();
+
+  // healthbar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h2x + hh.width, hh.h2y - 20); // botright
+  glVertex2i(hh.h2x + hh.width, hh.h2y - 5);  // top right
+  glVertex2i(hh.h2x, hh.h2y - 5);             // top left
+  glVertex2i(hh.h2x, hh.h2y - 20);            // bot left
+  glEnd();
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(hh.h2x + hh.width - 2, hh.h2y - 18); // botright
+  glVertex2i(hh.h2x + hh.width - 2, hh.h2y - 7);  // top right
+  glVertex2i(hh.h2x + 2, hh.h2y - 7);             // top left
+  glVertex2i(hh.h2x + 2, hh.h2y - 18);            // bot left
+  glEnd();
+  // ===================================================
+
+  glColor3f(1.0, 1.0, 1.0);
+
+  // ====================== Panther ======================
+  glBindTexture(GL_TEXTURE_2D, g.pantherhead.backTexture);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h3x + hh.width, hh.h3y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h3x + hh.width, hh.h3y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h3x, hh.h3y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h3x, hh.h3y + hh.height);
+  glEnd();
+
+  // healthbar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h3x + hh.width, hh.h3y - 20); // botright
+  glVertex2i(hh.h3x + hh.width, hh.h3y - 5);  // top right
+  glVertex2i(hh.h3x, hh.h3y - 5);             // top left
+  glVertex2i(hh.h3x, hh.h3y - 20);            // bot left
+  glEnd();
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(hh.h3x + hh.width - 2, hh.h3y - 18); // botright
+  glVertex2i(hh.h3x + hh.width - 2, hh.h3y - 7);  // top right
+  glVertex2i(hh.h3x + 2, hh.h3y - 7);             // top left
+  glVertex2i(hh.h3x + 2, hh.h3y - 18);            // bot left
+  glEnd();
+  // =====================================================
+
+  glColor3f(1.0, 1.0, 1.0);
+
+  // ====================== Skull ======================
+  glBindTexture(GL_TEXTURE_2D, g.skullhead.backTexture);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h4x + hh.width, hh.h4y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h4x + hh.width, hh.h4y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h4x, hh.h4y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h4x, hh.h4y + hh.height);
+  glEnd();
+
+  // healthbar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h4x + hh.width, hh.h4y - 20); // botright
+  glVertex2i(hh.h4x + hh.width, hh.h4y - 5);  // top right
+  glVertex2i(hh.h4x, hh.h4y - 5);             // top left
+  glVertex2i(hh.h4x, hh.h4y - 20);            // bot left
+  glEnd();
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(hh.h4x + hh.width - 2, hh.h4y - 18); // botright
+  glVertex2i(hh.h4x + hh.width - 2, hh.h4y - 7);  // top right
+  glVertex2i(hh.h4x + 2, hh.h4y - 7);             // top left
+  glVertex2i(hh.h4x + 2, hh.h4y - 18);            // bot left
+  glEnd();
+
+  // ===================================================
+
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
 void render_monaSprite()
 {
   glEnable(GL_TEXTURE_2D);
@@ -2154,12 +2416,13 @@ void render_actual()
   glColor3f(1.0, 1.0, 1.0);
         XEvent e = x11.getXNextEvent();
       x11.check_resize(&e);
-  render_monaSprite();
-  render_jokerSprite();
-  render_pantherSprite();
-  render_skullSprite();
+  // render_monaSprite();
+  // render_jokerSprite();
+  // render_pantherSprite();
+  // render_skullSprite();
   display_battleMenu();
-  display_hp();
+  render_heroHeads();
+  // display_hp();
 
   display_bossHealthBar();
 
