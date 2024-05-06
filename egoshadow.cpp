@@ -192,7 +192,6 @@ class BossHealthBar {
 } bossBar;
 
 
-
 class X11_wrapper {
 	public:
 		Global *global;
@@ -273,6 +272,93 @@ class X11_wrapper {
 			}
 		}
 } x11;
+
+class heroSprite {
+public:
+  int s1x, s2x, s3x, s4x; // sprite1x, sprite2x, etc. for x coords
+  int s1y, s2y, s3y, s4y; // sprite1y, sprite2y, etc. for y coords
+  int width;
+  int height;
+  heroSprite()
+  {
+    width = ((g.xres / 2) / 4) - 10;
+    s1x = (g.xres / 2) + 10;
+    s2x = s1x + width;
+    s3x = s2x + width;
+    s4x = s3x + width;
+
+    height = g.yres / 4 - 10;
+    s1y = height;
+    s2y = height;
+    s3y = height;
+    s4y = height;
+  }
+} hs;
+
+class heroHeads {
+public:
+  int width, height, gap;
+  int h1x, h2x, h3x, h4x; // head1x, head2x, etc. for x coords
+  int h1y, h2y, h3y, h4y; // head1y, head2y, etc. for y coords
+  heroHeads()
+  {
+    width = 75;
+    height = 75;
+    gap = 40;
+    h1x = (g.xres) - width - 10;
+    h2x = h1x;
+    h3x = h2x;
+    h4x = h3x;
+
+    h1y = g.yres - height - 10;
+    h2y = h1y - height - gap;
+    h3y = h2y - height - gap;
+    h4y = h3y - height - gap;
+  }
+} hh;
+
+
+class heroHealthBars {
+public:
+		float max_hp;
+		float current_health;
+		float previous_health;
+
+		int hb_length;
+		float percentage;
+		int hb_max_length;
+		int hb_container_length;
+    int lower_bound;
+    int upper_bound;
+    int actual_length;
+    int reduce_factor;
+    int max_actual_length;
+    int target_length;
+
+  heroHealthBars(int hp, int length, int lower) {
+
+    current_health = hp;
+    previous_health = hp;
+    max_hp = hp;
+
+    upper_bound = length;
+    lower_bound = lower;
+    actual_length = upper_bound - lower_bound;
+    max_actual_length = actual_length;
+
+    reduce_factor = actual_length;
+    percentage = current_health / max_hp;
+    
+    hb_max_length = length;
+    hb_length = hb_max_length * percentage;
+    target_length = actual_length;
+  }
+};
+
+heroHealthBars monaHB(MONA_HP, (hh.h1x + hh.width - 2), (hh.h1x + 2));
+heroHealthBars jokerHB(JOKER_HP, (hh.h2x + hh.width - 2), (hh.h2x + 2));
+heroHealthBars pantherHB(PANTHER_HP, (hh.h3x + hh.width - 2), (hh.h3x + 2));
+heroHealthBars skullHB(SKULL_HP, (hh.h4x + hh.width - 2), (hh.h4x + 2));
 
 
 class Character {
@@ -369,8 +455,42 @@ class Character {
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
+            if (target.name == "MONA") {
+                monaHB.percentage = target.hp / monaHB.max_hp;
+                monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+            } else if (target.name == "JOKER") {
+                jokerHB.percentage = target.hp / jokerHB.max_hp;
+                jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER") {
+                pantherHB.percentage = target.hp / pantherHB.max_hp;
+                pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            } else if (target.name == "SKULL") {
+                skullHB.percentage = target.hp / skullHB.max_hp;
+                skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
             //HP cost for phys skills
             caster.takeDamage(20);
+            if (caster.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+            }
+            else if (caster.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (caster.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (caster.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -401,6 +521,30 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
             caster.takeDamage(25);
+            if (target.name == "MONA")
+            {
+
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+              
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -431,6 +575,28 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
             caster.takeDamage(22);
+            if (target.name == "MONA")
+            {
+              
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -468,6 +634,27 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -507,6 +694,27 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -546,6 +754,21 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+                        if (target.name == "MONA") {
+                monaHB.percentage = target.hp / monaHB.max_hp;
+                monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+                std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            } else if (target.name == "JOKER") {
+                jokerHB.percentage = target.hp / jokerHB.max_hp;
+                jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER") {
+                pantherHB.percentage = target.hp / pantherHB.max_hp;
+                pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            } else if (target.name == "SKULL") {
+                skullHB.percentage = target.hp / skullHB.max_hp;
+                skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -585,6 +808,27 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -708,6 +952,27 @@ class Character {
               }
               std::cout << target.name << " takes " << damage << " damage \n\n";
               target.takeDamage(damage);
+              if (target.name == "MONA")
+              {
+                monaHB.percentage = target.hp / monaHB.max_hp;
+                monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+                std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+              }
+              else if (target.name == "JOKER")
+              {
+                jokerHB.percentage = target.hp / jokerHB.max_hp;
+                jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+              }
+              else if (target.name == "PANTHER")
+              {
+                pantherHB.percentage = target.hp / pantherHB.max_hp;
+                pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+              }
+              else if (target.name == "SKULL")
+              {
+                skullHB.percentage = target.hp / skullHB.max_hp;
+                skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+              }
             }
           }
         }
@@ -738,6 +1003,27 @@ class Character {
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -1226,49 +1512,6 @@ class gameLogic {
     }
 } game;
 
-class heroSprite {
-public:
-  int s1x, s2x, s3x, s4x; // sprite1x, sprite2x, etc. for x coords
-  int s1y, s2y, s3y, s4y; // sprite1y, sprite2y, etc. for y coords
-  int width;
-  int height;
-  heroSprite()
-  {
-    width = ((g.xres / 2) / 4) - 10;
-    s1x = (g.xres / 2) + 10;
-    s2x = s1x + width;
-    s3x = s2x + width;
-    s4x = s3x + width;
-
-    height = g.yres / 4 - 10;
-    s1y = height;
-    s2y = height;
-    s3y = height;
-    s4y = height;
-  }
-} hs;
-
-class heroHeads {
-public:
-  int width, height, gap;
-  int h1x, h2x, h3x, h4x; // head1x, head2x, etc. for x coords
-  int h1y, h2y, h3y, h4y; // head1y, head2y, etc. for y coords
-  heroHeads()
-  {
-    width = 75;
-    height = 75;
-    gap = 40;
-    h1x = (g.xres) - width - 10;
-    h2x = h1x;
-    h3x = h2x;
-    h4x = h3x;
-
-    h1y = g.yres - height - 10;
-    h2y = h1y - height - gap;
-    h3y = h2y - height - gap;
-    h4y = h3y - height - gap;
-  }
-} hh;
 
 
 
@@ -1283,7 +1526,6 @@ Character characters[4] = {
 Character boss[1] = {
   Character("ARSENE", MAX_BOSS_HP, MAX_BOSS_HP, MAX_BOSS_SP, MAX_BOSS_SP, "none", "none", Character::BOSS_ACTIONS, true)
 };
-
 
 
 
@@ -1310,7 +1552,10 @@ int* generate_initiative(int);
 void render_screen();
 void display_bossHealthBar();
 void reduce_bossHealthBar();
-
+void reduce_monaHB();
+void reduce_jokerHB();
+void reduce_pantherHB();
+void reduce_skullHB();
 
 void render_monaSprite();
 void render_jokerSprite();
@@ -1337,6 +1582,7 @@ int main()
   for (int i = 0; i < 4; ++i) {
     std::cout << "Character " << i + 1 << " name: " << characters[i].name << std::endl;
     std::cout << "Character " << i + 1 << " HP: " << characters[i].hp << std::endl;
+    std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
     std::cout << std::endl;
   }
 
@@ -1988,6 +2234,34 @@ void reduce_bossHealthBar() {
 		bossBar.previous_health = bossBar.previous_health - 2.0;
 }
 
+void reduce_monaHB()
+{
+  //std::cout << "<Mona> actual: " << monaHB.actual_length << "<Mona> Target: " << monaHB.target_length << std::endl;
+  monaHB.actual_length = monaHB.actual_length - 1.0;
+  monaHB.hb_length = monaHB.hb_length - 1.0;
+}
+
+void reduce_jokerHB()
+{
+  //std::cout << "Joker actual: " << jokerHB.actual_length << "Joker Target: " << jokerHB.target_length << std::endl;
+  jokerHB.actual_length = jokerHB.actual_length - 1.0;
+  jokerHB.hb_length = jokerHB.hb_length - 1.0;
+}
+
+void reduce_pantherHB()
+{
+  //std::cout << "Panther actual: " << pantherHB.actual_length << "Panther Target: " << pantherHB.target_length << std::endl;
+  pantherHB.actual_length = pantherHB.actual_length - 1.0;
+  pantherHB.hb_length = pantherHB.hb_length - 1.0;
+}
+
+void reduce_skullHB()
+{
+  //std::cout << "Skull actual: " << skullHB.actual_length << "Skull Target: " << skullHB.target_length << std::endl;
+  skullHB.actual_length = skullHB.actual_length - 1.0;
+  skullHB.hb_length = skullHB.hb_length - 1.0;
+}
+
 //Function to Display Main Menu
 void display_menu() {
   int selectedOption = 0; // Track the selected option
@@ -2193,11 +2467,17 @@ void render_heroHeads()
   glVertex2i(hh.h1x, hh.h1y - 20);            // bot left
   glEnd();
 
+  monaHB.current_health = characters[1].hp;
+
+  // std::cout << "Percentage: " << monaHB.percentage << std::endl;
+  // std::cout << "length: " << monaHB.hb_length << std::endl;
+  // std::cout << "length after: " << monaHB.hb_length << std::endl;
+
   // health bar
   glBegin(GL_QUADS);
   glColor3ub(238, 75, 62);
-  glVertex2i(hh.h1x + hh.width - 2, hh.h1y - 18); // botright
-  glVertex2i(hh.h1x + hh.width - 2, hh.h1y - 7);  // top right
+  glVertex2i(monaHB.hb_length, hh.h1y - 18); // botright
+  glVertex2i(monaHB.hb_length, hh.h1y - 7);  // top right
   glVertex2i(hh.h1x + 2, hh.h1y - 7);             // top left
   glVertex2i(hh.h1x + 2, hh.h1y - 18);            // bot left
   glEnd();
@@ -2222,6 +2502,8 @@ void render_heroHeads()
   glVertex2i(hh.h2x, hh.h2y + hh.height);
   glEnd();
 
+  jokerHB.current_health = characters[2].hp;
+
   // healthbar container
   glBegin(GL_QUADS);
   glColor3ub(0, 0, 0);
@@ -2234,8 +2516,8 @@ void render_heroHeads()
   // health bar
   glBegin(GL_QUADS);
   glColor3ub(238, 75, 62);
-  glVertex2i(hh.h2x + hh.width - 2, hh.h2y - 18); // botright
-  glVertex2i(hh.h2x + hh.width - 2, hh.h2y - 7);  // top right
+  glVertex2i(jokerHB.hb_length, hh.h2y - 18); // botright
+  glVertex2i(jokerHB.hb_length, hh.h2y - 7);  // top right
   glVertex2i(hh.h2x + 2, hh.h2y - 7);             // top left
   glVertex2i(hh.h2x + 2, hh.h2y - 18);            // bot left
   glEnd();
@@ -2269,11 +2551,13 @@ void render_heroHeads()
   glVertex2i(hh.h3x, hh.h3y - 20);            // bot left
   glEnd();
 
+  pantherHB.current_health = characters[3].hp;
+
   // health bar
   glBegin(GL_QUADS);
   glColor3ub(238, 75, 62);
-  glVertex2i(hh.h3x + hh.width - 2, hh.h3y - 18); // botright
-  glVertex2i(hh.h3x + hh.width - 2, hh.h3y - 7);  // top right
+  glVertex2i(pantherHB.hb_length, hh.h3y - 18); // botright
+  glVertex2i(pantherHB.hb_length, hh.h3y - 7);  // top right
   glVertex2i(hh.h3x + 2, hh.h3y - 7);             // top left
   glVertex2i(hh.h3x + 2, hh.h3y - 18);            // bot left
   glEnd();
@@ -2298,6 +2582,7 @@ void render_heroHeads()
   glVertex2i(hh.h4x, hh.h4y + hh.height);
   glEnd();
 
+
   // healthbar container
   glBegin(GL_QUADS);
   glColor3ub(0, 0, 0);
@@ -2307,11 +2592,13 @@ void render_heroHeads()
   glVertex2i(hh.h4x, hh.h4y - 20);            // bot left
   glEnd();
 
+  skullHB.current_health = characters[4].hp;
+
   // health bar
   glBegin(GL_QUADS);
   glColor3ub(238, 75, 62);
-  glVertex2i(hh.h4x + hh.width - 2, hh.h4y - 18); // botright
-  glVertex2i(hh.h4x + hh.width - 2, hh.h4y - 7);  // top right
+  glVertex2i(skullHB.hb_length, hh.h4y - 18); // botright
+  glVertex2i(skullHB.hb_length, hh.h4y - 7);  // top right
   glVertex2i(hh.h4x + 2, hh.h4y - 7);             // top left
   glVertex2i(hh.h4x + 2, hh.h4y - 18);            // bot left
   glEnd();
@@ -2414,16 +2701,14 @@ void render_actual()
   glClearColor(1.0, 1.0, 1.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT);
   glColor3f(1.0, 1.0, 1.0);
-        XEvent e = x11.getXNextEvent();
-      x11.check_resize(&e);
+  XEvent e = x11.getXNextEvent();
+  x11.check_resize(&e);
   // render_monaSprite();
   // render_jokerSprite();
   // render_pantherSprite();
   // render_skullSprite();
   display_battleMenu();
   render_heroHeads();
-  // display_hp();
-
   display_bossHealthBar();
 
   x11.swapBuffers();
@@ -2445,6 +2730,38 @@ void render()
 		x11.swapBuffers();
 	}
 
+  while (monaHB.target_length < monaHB.actual_length)
+	{
+    std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+		reduce_monaHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+  while (jokerHB.target_length < jokerHB.actual_length)
+	{
+    std::cout << "Reducing..." << std::endl;
+		reduce_jokerHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+
+    while (pantherHB.target_length < pantherHB.actual_length)
+	{
+    std::cout << "Reducing..." << std::endl;
+		reduce_pantherHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+    while (skullHB.target_length < skullHB.actual_length)
+	{
+    std::cout << "Reducing..." << std::endl;
+		reduce_skullHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+
+
+  std::cout << "Mona HP: " << characters[1].hp << std::endl;
   if (game.currentActor == 0) {
     characters[0].selectAction(characters, boss, 0);
     ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
