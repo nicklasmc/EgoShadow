@@ -116,7 +116,7 @@ class Image {
       unlink(ppmname);
     }
 };
-Image img[4] = {"fixed_titlecard.png", "solaire.png", "abyss.png", "ds.jpg"};
+Image img[9] = {"fixed_titlecard.png", "solaire.png", "abyss.png", "ds.jpg", "mona2.png", "joker.png", "pantherfixed.png", "skullfixed.png", "arsene.png"};
 
 class Texture {
   public:
@@ -136,6 +136,11 @@ class Global {
     Texture solaire;
     Texture abyss;
     Texture city;
+    Texture mona;
+    Texture joker;
+    Texture panther;
+    Texture skull;
+    Texture arsene;
 
 
 		Global() {
@@ -1187,9 +1192,6 @@ class Character {
 
 };
 
-
-
-
 class gameLogic {
   public: 
     bool turnDone;
@@ -1205,6 +1207,27 @@ class gameLogic {
       }
     }
 } game;
+
+class heroSprite {
+  public:
+  int s1x, s2x, s3x, s4x;
+  int s1y, s2y, s3y, s4y;
+  int width;
+  int height;
+  heroSprite() {
+    width = ((g.xres/2) / 4) - 10;
+    s1x = (g.xres/2) + 10;
+    s2x = s1x + width;
+    s3x = s2x + width;
+    s4x = s3x + width;
+
+    height = g.yres/4 - 10;
+    s1y = height;
+    s2y = height;
+    s3y = height;
+    s4y = height;
+  }
+} hs;
 
 Character characters[4] = {
   Character("JOKER", JOKER_HP, JOKER_HP, JOKER_SP, JOKER_SP, "ice", "fire", Character::JOKER_ACTIONS, false),
@@ -1243,6 +1266,11 @@ int* generate_initiative(int);
 void render_screen();
 void display_bossHealthBar();
 void reduce_bossHealthBar();
+void render_monaSprite();
+void render_jokerSprite();
+void render_pantherSprite();
+void render_skullSprite();
+void render_boss();
 
 int* generate_initiative(int arr[]) {
   std::random_shuffle(&arr[0], &arr[5]);
@@ -1414,9 +1442,80 @@ void init_opengl(void)
   g.city.yc[0] = 0.0;
   g.city.yc[1] = 1.0;
 
+//mona
+  g.mona.backImage = &img[4];
+  glGenTextures(1, &g.mona.backTexture);
+  w = g.mona.backImage->width;
+  h = g.mona.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+      GL_RGB, GL_UNSIGNED_BYTE, g.mona.backImage->data);
+  g.mona.xc[0] = 0.0;
+  g.mona.xc[1] = 1.0;
+  g.mona.yc[0] = 0.0;
+  g.mona.yc[1] = 1.0;
 
+  //joker
+    g.joker.backImage = &img[5];
+  glGenTextures(1, &g.joker.backTexture);
+  w = g.joker.backImage->width;
+  h = g.joker.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+      GL_RGB, GL_UNSIGNED_BYTE, g.joker.backImage->data);
+  g.joker.xc[0] = 0.0;
+  g.joker.xc[1] = 1.0;
+  g.joker.yc[0] = 0.0;
+  g.joker.yc[1] = 1.0;
 
+   //panther
+  g.panther.backImage = &img[6];
+  glGenTextures(1, &g.panther.backTexture);
+  w = g.panther.backImage->width;
+  h = g.panther.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+      GL_RGB, GL_UNSIGNED_BYTE, g.panther.backImage->data);
+  g.panther.xc[0] = 0.0;
+  g.panther.xc[1] = 1.0;
+  g.panther.yc[0] = 0.0;
+  g.panther.yc[1] = 1.0;
 
+     //skull
+    g.skull.backImage = &img[7];
+  glGenTextures(1, &g.skull.backTexture);
+  w = g.skull.backImage->width;
+  h = g.skull.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+      GL_RGB, GL_UNSIGNED_BYTE, g.skull.backImage->data);
+  g.skull.xc[0] = 0.0;
+  g.skull.xc[1] = 1.0;
+  g.skull.yc[0] = 0.0;
+  g.skull.yc[1] = 1.0;
+
+       //arsene
+    g.arsene.backImage = &img[8];
+  glGenTextures(1, &g.arsene.backTexture);
+  w = g.arsene.backImage->width;
+  h = g.arsene.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.arsene.backTexture);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+      GL_RGB, GL_UNSIGNED_BYTE, g.arsene.backImage->data);
+  g.arsene.xc[0] = 0.0;
+  g.arsene.xc[1] = 1.0;
+  g.arsene.yc[0] = 0.0;
+  g.arsene.yc[1] = 1.0;
 
 }
 
@@ -1538,6 +1637,8 @@ void play_game()
 			render_actual();
 			render();
 			physics();
+
+   
 			x11.swapBuffers();
 		}
 		i++;
@@ -1729,16 +1830,16 @@ void display_battleMenu() {
 	glColor3ub(0, 24, 62);
 	glBegin(GL_QUADS); 
 	glVertex2i(0, g.yres/4); // topleft: (x,y)
-	glVertex2i(g.xres, g.yres/4); // topright: (x,y)
-	glVertex2i(g.xres, 0); // botright: (x,y)
+	glVertex2i(g.xres/2 + 10, g.yres/4); // topright: (x,y)
+	glVertex2i(g.xres/2 + 10, 0); // botright: (x,y)
 	glVertex2i(0, 0); // botleft: (x,y)
 	glEnd();
 	// main container inner
 	glColor3ub(255,255,255);
 	glBegin(GL_QUADS); 
 	glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
-	glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
-	glVertex2i(g.xres - 10, 10); // botright: (x,y)
+	glVertex2i(g.xres/2, (g.yres/4) - 10); // topright: (x,y)
+	glVertex2i(g.xres/2, 10); // botright: (x,y)
 	glVertex2i(10,10); // botleft: (x,y)
 	glDisable(GL_BLEND);
 	glEnd();
@@ -1839,6 +1940,7 @@ void display_menu() {
 
       // ----- Texture on box ----- //
       glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
+
       glBegin(GL_QUADS);
       // 0,0 = top left
       // 1,1 = bottom right
@@ -1958,30 +2060,114 @@ void physics()
 {
 }
 
+void render_monaSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s1x, hs.s1y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s1x + hs.width, hs.s1y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s1x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s1x, 0);
 
-void render_actual() {
-        glClearColor(1.0, 1.0, 1.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glColor3f(1.0, 1.0, 1.0);
-        display_battleMenu();
-		display_hp();
 
-		display_bossHealthBar();
-     
-		
-		
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+void render_jokerSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s2x, hs.s2y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s2x + hs.width, hs.s2y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s2x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s2x, 0);
 
-		x11.swapBuffers();
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+void render_pantherSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s3x, hs.s3y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s3x + hs.width, hs.s3y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s3x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s3x, 0);
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+void render_skullSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s4x, hs.s4y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s4x + hs.width, hs.s4y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s4x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s4x, 0);
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+
+void render_actual()
+{
+  glClearColor(1.0, 1.0, 1.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glColor3f(1.0, 1.0, 1.0);
+        XEvent e = x11.getXNextEvent();
+      x11.check_resize(&e);
+  render_monaSprite();
+  render_jokerSprite();
+  render_pantherSprite();
+  render_skullSprite();
+  display_battleMenu();
+  display_hp();
+
+  display_bossHealthBar();
+
+  x11.swapBuffers();
 }
 void render()
 {
-	/*
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
-	display_battleMenu();
-	display_hp();
-	*/
+
 	Rect r;
 	// Set the position for displaying HP in the top left corner
 	r.bot = g.yres - 20;
