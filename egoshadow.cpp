@@ -1557,6 +1557,7 @@ void reduce_jokerHB();
 void reduce_pantherHB();
 void reduce_skullHB();
 
+void render_currentHero();
 void render_monaSprite();
 void render_jokerSprite();
 void render_pantherSprite();
@@ -2196,39 +2197,39 @@ void display_battleMenu() {
   // std::cout << "Battle Menu init" << std::endl;
 }
 
-void display_bossHealthBar() {
-	glEnable(GL_BLEND);
-	// boss health bar container
-	glColor3ub(0, 0, 0);
-	glBegin(GL_QUADS); 
-	glVertex2i(20, g.yres-40); // topleft: (x,y)
-	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
-	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
-	glVertex2i(20, g.yres-80); // botleft: (x,y)
-	glEnd();
+// void display_bossHealthBar() {
+// 	glEnable(GL_BLEND);
+// 	// boss health bar container
+// 	glColor3ub(0, 0, 0);
+// 	glBegin(GL_QUADS); 
+// 	glVertex2i(20, g.yres-40); // topleft: (x,y)
+// 	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
+// 	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
+// 	glVertex2i(20, g.yres-80); // botleft: (x,y)
+// 	glEnd();
 
 
-	bossBar.current_health = boss[0].hp;
-	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
-	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
-	// std::cout << boss[0].max_hp << std::endl;
-	// std::cout << boss[0].hp << std::endl;
-	// std::cout << g.xres/2 - 10 << std::endl;
-	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
-	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
+// 	bossBar.current_health = boss[0].hp;
+// 	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
+// 	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
+// 	// std::cout << boss[0].max_hp << std::endl;
+// 	// std::cout << boss[0].hp << std::endl;
+// 	// std::cout << g.xres/2 - 10 << std::endl;
+// 	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
+// 	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
 	
 
-	// healthbar
-	glBegin(GL_QUADS); 
-	glColor3ub(238, 75, 62);
-	glVertex2i(32, g.yres-45); // topleft: (x,y)
-	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
-	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
-	glVertex2i(32, g.yres-75); // botleft: (x,y)
-	glEnd();
-	glDisable(GL_BLEND);
+// 	// healthbar
+// 	glBegin(GL_QUADS); 
+// 	glColor3ub(238, 75, 62);
+// 	glVertex2i(32, g.yres-45); // topleft: (x,y)
+// 	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
+// 	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
+// 	glVertex2i(32, g.yres-75); // botleft: (x,y)
+// 	glEnd();
+// 	glDisable(GL_BLEND);
 
-}
+// }
 
 void reduce_bossHealthBar() {
 		bossBar.previous_health = bossBar.previous_health - 2.0;
@@ -2437,6 +2438,7 @@ void physics()
 
 void render_heroHeads()
 {
+  // glColor3ub(1, 1, 1);
   glEnable(GL_TEXTURE_2D);
 
   // ====================== Mona ======================
@@ -2459,8 +2461,8 @@ void render_heroHeads()
   glEnd();
 
   // health bar container
+    glColor3ub(0, 0, 0);
   glBegin(GL_QUADS);
-  glColor3ub(0, 0, 0);
   glVertex2i(hh.h1x + hh.width, hh.h1y - 20); // botright
   glVertex2i(hh.h1x + hh.width, hh.h1y - 5);  // top right
   glVertex2i(hh.h1x, hh.h1y - 5);             // top left
@@ -2695,6 +2697,110 @@ void render_skullSprite()
   glDisable(GL_TEXTURE_2D);
 }
 
+void render_currentHero() {
+  glEnable(GL_TEXTURE_2D);
+    glColor3f(1.0, 1.0, 1.0);
+     std::cout << " Current actor: " << game.currentActor << std::endl;
+  if (game.currentActor == 0) {
+    glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
+  }
+  else if (game.currentActor == 1)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
+  }
+  else if (game.currentActor == 2)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  }
+  else if (game.currentActor == 3)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  } 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  int x = g.xres/2 + 200;
+  int y = g.yres/4 + 10;
+  int width = 150;
+  int height = g.yres - 100;
+
+  glTexCoord2f(0.0, 1.0); glVertex2i(x, y); // bot left
+  glTexCoord2f(1.0, 1.0); glVertex2i(x + width, y); // bot right
+  glTexCoord2f(1.0, 0.0); glVertex2i(x + width, height); // top right
+  glTexCoord2f(0.0, 0.0); glVertex2i(x, height); // top left
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+void display_bossHealthBar() {
+
+
+
+
+	glEnable(GL_BLEND);
+
+	glColor3ub(0, 0, 0);
+	glBegin(GL_QUADS); 
+	glVertex2i(20, g.yres-40); // topleft: (x,y)
+	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
+	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
+	glVertex2i(20, g.yres-80); // botleft: (x,y)
+	glEnd();
+
+
+	bossBar.current_health = boss[0].hp;
+	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
+	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
+	// std::cout << boss[0].max_hp << std::endl;
+	// std::cout << boss[0].hp << std::endl;
+	// std::cout << g.xres/2 - 10 << std::endl;
+	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
+	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
+	
+
+	// healthbar
+	glBegin(GL_QUADS); 
+	glColor3ub(238, 75, 62);
+	glVertex2i(32, g.yres-45); // topleft: (x,y)
+	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
+	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
+	glVertex2i(32, g.yres-75); // botleft: (x,y)
+	glEnd();
+	glDisable(GL_BLEND);
+
+}
+
+void render_boss() {
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.arsene.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(g.xres / 2, g.yres / 4 + 10); // bot right
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(g.xres / 2, g.yres - 100); // top right
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(5, g.yres - 100); // top left
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(5, g.yres / 4 + 10); // bot left
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
 
 void render_actual()
 {
@@ -2707,9 +2813,12 @@ void render_actual()
   // render_jokerSprite();
   // render_pantherSprite();
   // render_skullSprite();
+  render_currentHero();
   display_battleMenu();
+  render_boss();
   render_heroHeads();
   display_bossHealthBar();
+  render_currentHero();
 
   x11.swapBuffers();
 }
@@ -2732,14 +2841,12 @@ void render()
 
   while (monaHB.target_length < monaHB.actual_length)
 	{
-    std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
 		reduce_monaHB();
     render_heroHeads();
 		x11.swapBuffers();
 	}
   while (jokerHB.target_length < jokerHB.actual_length)
 	{
-    std::cout << "Reducing..." << std::endl;
 		reduce_jokerHB();
     render_heroHeads();
 		x11.swapBuffers();
@@ -2747,14 +2854,12 @@ void render()
 
     while (pantherHB.target_length < pantherHB.actual_length)
 	{
-    std::cout << "Reducing..." << std::endl;
 		reduce_pantherHB();
     render_heroHeads();
 		x11.swapBuffers();
 	}
     while (skullHB.target_length < skullHB.actual_length)
 	{
-    std::cout << "Reducing..." << std::endl;
 		reduce_skullHB();
     render_heroHeads();
 		x11.swapBuffers();
