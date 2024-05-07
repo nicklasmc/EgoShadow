@@ -116,7 +116,7 @@ class Image {
       unlink(ppmname);
     }
 };
-Image img[13] = {
+Image img[17] = {
   "fixed_titlecard.png", 
   "solaire.png", 
   "abyss.png", 
@@ -129,7 +129,11 @@ Image img[13] = {
   "monahead.png",
   "jokerhead.png",
   "pantherhead.png",
-  "skullhead.png"
+  "skullhead.png",
+  "arsenetext.png",
+  "jokertext.png",
+  "monatext.png",
+  "panthertext.png"
   };
 
 class Texture {
@@ -155,11 +159,16 @@ class Global {
     Texture panther;
     Texture skull;
     Texture arsene;
+    Texture jokerheader;
+    Texture monatext;
+    Texture panthertext;
 
     Texture monahead;
     Texture jokerhead;
     Texture pantherhead;
     Texture skullhead;
+    Texture arsenetext;
+
 
 		Global() {
 			//xres=1024, yres=1024;
@@ -1866,6 +1875,69 @@ void init_opengl(void)
   g.skullhead.xc[1] = 1.0;
   g.skullhead.yc[0] = 0.0;
   g.skullhead.yc[1] = 1.0;
+
+
+  // unsigned char *data13 = buildAlphaData(&img[13]);
+  g.arsenetext.backImage = &img[13];
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glGenTextures(1, &g.arsenetext.backTexture);
+  w = g.arsenetext.backImage->width;
+  h = g.arsenetext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.arsenetext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.arsenetext.backImage->data);
+  g.arsenetext.xc[0] = 0.0;
+  g.arsenetext.xc[1] = 1.0;
+  g.arsenetext.yc[0] = 0.0;
+  g.arsenetext.yc[1] = 1.0;
+
+  unsigned char *data14 = buildAlphaData(&img[14]);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.jokerheader.backImage = &img[14];
+  glGenTextures(1, &g.jokerheader.backTexture);
+  w = g.jokerheader.backImage->width;
+  h = g.jokerheader.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.jokerheader.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.jokerheader.backImage->data);
+  g.jokerheader.xc[0] = 0.0;
+  g.jokerheader.xc[1] = 1.0;
+  g.jokerheader.yc[0] = 0.0;
+  g.jokerheader.yc[1] = 1.0;
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.monatext.backImage = &img[15];
+  glGenTextures(1, &g.monatext.backTexture);
+  w = g.monatext.backImage->width;
+  h = g.monatext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.monatext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.monatext.backImage->data);
+  g.monatext.xc[0] = 0.0;
+  g.monatext.xc[1] = 1.0;
+  g.monatext.yc[0] = 0.0;
+  g.monatext.yc[1] = 1.0;
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.panthertext.backImage = &img[15];
+  glGenTextures(1, &g.panthertext.backTexture);
+  w = g.panthertext.backImage->width;
+  h = g.panthertext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.panthertext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.panthertext.backImage->data);
+  g.panthertext.xc[0] = 0.0;
+  g.panthertext.xc[1] = 1.0;
+  g.panthertext.yc[0] = 0.0;
+  g.panthertext.yc[1] = 1.0;
 }
 
 void init() {
@@ -2192,6 +2264,49 @@ void display_battleMenu() {
 	glDisable(GL_BLEND);
 	glEnd();
 
+  int width = 500;
+  int height = 100;
+  int x = 15;
+  int y = (g.yres/4) - 10;
+
+  glColor3f(1.0, 1.0, 1.0);
+  glEnable(GL_TEXTURE_2D);
+
+  if (game.currentActor == 0)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.monatext.backTexture);
+  }
+  else if (game.currentActor == 1)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.jokerheader.backTexture);
+  }
+  else if (game.currentActor == 2)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  }
+  else if (game.currentActor == 3)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  }
+  else if (game.currentActor == 4)
+  {
+    return;
+  }
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 1.0); glVertex2i(10,10); // botleft: (x,y)
+  glTexCoord2f(1.0, 1.0); glVertex2i(g.xres - 10, 10); // botright: (x,y)
+  glTexCoord2f(1.0, 0.0); glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
+  glTexCoord2f(0.0, 0.0); 	glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
+	glDisable(GL_BLEND);
+	glEnd();
+
+  // x11.swapBuffers();
   // glXSwapBuffers(x11.dpy, x11.win);
   // usleep(1000);
   // std::cout << "Battle Menu init" << std::endl;
@@ -2699,8 +2814,8 @@ void render_skullSprite()
 
 void render_currentHero() {
   glEnable(GL_TEXTURE_2D);
-    glColor3f(1.0, 1.0, 1.0);
-     std::cout << " Current actor: " << game.currentActor << std::endl;
+  glColor3f(1.0, 1.0, 1.0);
+  //std::cout << " Current actor: " << game.currentActor << std::endl;
   if (game.currentActor == 0) {
     glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
   }
@@ -2715,6 +2830,10 @@ void render_currentHero() {
   else if (game.currentActor == 3)
   {
     glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  } 
+  else if (game.currentActor == 4)
+  {
+    return;
   } 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -2740,8 +2859,26 @@ void render_currentHero() {
 }
 
 void display_bossHealthBar() {
+  glColor3f(1.0, 1.0, 1.0);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.arsenetext.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  int width = bossBar.hb_container_length / 2;
+  glTexCoord2f(0.0, 1.0); glVertex2i(20, g.yres - 30); // bot left
+  glTexCoord2f(1.0, 1.0); glVertex2i(20 + width, g.yres - 30); // bot right
+  glTexCoord2f(1.0, 0.0); glVertex2i(20 + width,  g.yres - 5); // top right
+  glTexCoord2f(0.0, 0.0); glVertex2i(20, g.yres - 5); // top left
 
 
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
 
 
 	glEnable(GL_BLEND);
@@ -2869,27 +3006,27 @@ void render()
   std::cout << "Mona HP: " << characters[1].hp << std::endl;
   if (game.currentActor == 0) {
     characters[0].selectAction(characters, boss, 0);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 1) {
     characters[1].selectAction(characters, boss, 1);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 2) {
     characters[2].selectAction(characters, boss, 2);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 3) {
     characters[3].selectAction(characters, boss, 3);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 4 for skull actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 4 for skull actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 4) {
     boss[0].selectAction(characters, boss, 4);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 5 for boss to attack all");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 5 for boss to attack all");
     r.bot -= 20;
     game.turnDone = 1;
   }
