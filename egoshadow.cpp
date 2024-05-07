@@ -159,7 +159,7 @@ class Global {
     Texture panther;
     Texture skull;
     Texture arsene;
-    Texture jokerheader;
+    Texture jokertext;
     Texture monatext;
     Texture panthertext;
 
@@ -1895,19 +1895,19 @@ void init_opengl(void)
 
   unsigned char *data14 = buildAlphaData(&img[14]);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  g.jokerheader.backImage = &img[14];
-  glGenTextures(1, &g.jokerheader.backTexture);
-  w = g.jokerheader.backImage->width;
-  h = g.jokerheader.backImage->height;
-  glBindTexture(GL_TEXTURE_2D, g.jokerheader.backTexture);
+  g.jokertext.backImage = &img[14];
+  glGenTextures(1, &g.jokertext.backTexture);
+  w = g.jokertext.backImage->width;
+  h = g.jokertext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.jokertext.backTexture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
-               GL_RGB, GL_UNSIGNED_BYTE, g.jokerheader.backImage->data);
-  g.jokerheader.xc[0] = 0.0;
-  g.jokerheader.xc[1] = 1.0;
-  g.jokerheader.yc[0] = 0.0;
-  g.jokerheader.yc[1] = 1.0;
+               GL_RGB, GL_UNSIGNED_BYTE, g.jokertext.backImage->data);
+  g.jokertext.xc[0] = 0.0;
+  g.jokertext.xc[1] = 1.0;
+  g.jokertext.yc[0] = 0.0;
+  g.jokertext.yc[1] = 1.0;
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   g.monatext.backImage = &img[15];
@@ -2278,7 +2278,7 @@ void display_battleMenu() {
   }
   else if (game.currentActor == 1)
   {
-    glBindTexture(GL_TEXTURE_2D, g.jokerheader.backTexture);
+    glBindTexture(GL_TEXTURE_2D, g.jokertext.backTexture);
   }
   else if (game.currentActor == 2)
   {
