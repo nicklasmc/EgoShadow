@@ -116,7 +116,25 @@ class Image {
       unlink(ppmname);
     }
 };
-Image img[4] = {"fixed_titlecard.png", "solaire.png", "abyss.png", "ds.jpg"};
+Image img[17] = {
+  "fixed_titlecard.png", 
+  "solaire.png", 
+  "abyss.png", 
+  "ds.jpg", 
+  "mona2.png", 
+  "joker.png", 
+  "pantherfixed.png", 
+  "skullfixed.png", 
+  "arsene.png",
+  "monahead.png",
+  "jokerhead.png",
+  "pantherhead.png",
+  "skullhead.png",
+  "arsenetext.png",
+  "jokertext.png",
+  "monatext.png",
+  "panthertext.png"
+  };
 
 class Texture {
   public:
@@ -136,6 +154,20 @@ class Global {
     Texture solaire;
     Texture abyss;
     Texture city;
+    Texture mona;
+    Texture joker;
+    Texture panther;
+    Texture skull;
+    Texture arsene;
+    Texture jokertext;
+    Texture monatext;
+    Texture panthertext;
+
+    Texture monahead;
+    Texture jokerhead;
+    Texture pantherhead;
+    Texture skullhead;
+    Texture arsenetext;
 
 
 		Global() {
@@ -167,7 +199,6 @@ class BossHealthBar {
 
 	}
 } bossBar;
-
 
 
 class X11_wrapper {
@@ -250,6 +281,93 @@ class X11_wrapper {
 			}
 		}
 } x11;
+
+class heroSprite {
+public:
+  int s1x, s2x, s3x, s4x; // sprite1x, sprite2x, etc. for x coords
+  int s1y, s2y, s3y, s4y; // sprite1y, sprite2y, etc. for y coords
+  int width;
+  int height;
+  heroSprite()
+  {
+    width = ((g.xres / 2) / 4) - 10;
+    s1x = (g.xres / 2) + 10;
+    s2x = s1x + width;
+    s3x = s2x + width;
+    s4x = s3x + width;
+
+    height = g.yres / 4 - 10;
+    s1y = height;
+    s2y = height;
+    s3y = height;
+    s4y = height;
+  }
+} hs;
+
+class heroHeads {
+public:
+  int width, height, gap;
+  int h1x, h2x, h3x, h4x; // head1x, head2x, etc. for x coords
+  int h1y, h2y, h3y, h4y; // head1y, head2y, etc. for y coords
+  heroHeads()
+  {
+    width = 75;
+    height = 75;
+    gap = 40;
+    h1x = (g.xres) - width - 10;
+    h2x = h1x;
+    h3x = h2x;
+    h4x = h3x;
+
+    h1y = g.yres - height - 10;
+    h2y = h1y - height - gap;
+    h3y = h2y - height - gap;
+    h4y = h3y - height - gap;
+  }
+} hh;
+
+
+class heroHealthBars {
+public:
+		float max_hp;
+		float current_health;
+		float previous_health;
+
+		int hb_length;
+		float percentage;
+		int hb_max_length;
+		int hb_container_length;
+    int lower_bound;
+    int upper_bound;
+    int actual_length;
+    int reduce_factor;
+    int max_actual_length;
+    int target_length;
+
+  heroHealthBars(int hp, int length, int lower) {
+
+    current_health = hp;
+    previous_health = hp;
+    max_hp = hp;
+
+    upper_bound = length;
+    lower_bound = lower;
+    actual_length = upper_bound - lower_bound;
+    max_actual_length = actual_length;
+
+    reduce_factor = actual_length;
+    percentage = current_health / max_hp;
+    
+    hb_max_length = length;
+    hb_length = hb_max_length * percentage;
+    target_length = actual_length;
+  }
+};
+
+heroHealthBars monaHB(MONA_HP, (hh.h1x + hh.width - 2), (hh.h1x + 2));
+heroHealthBars jokerHB(JOKER_HP, (hh.h2x + hh.width - 2), (hh.h2x + 2));
+heroHealthBars pantherHB(PANTHER_HP, (hh.h3x + hh.width - 2), (hh.h3x + 2));
+heroHealthBars skullHB(SKULL_HP, (hh.h4x + hh.width - 2), (hh.h4x + 2));
 
 
 class Character {
@@ -346,8 +464,42 @@ class Character {
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
+            if (target.name == "MONA") {
+                monaHB.percentage = target.hp / monaHB.max_hp;
+                monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+            } else if (target.name == "JOKER") {
+                jokerHB.percentage = target.hp / jokerHB.max_hp;
+                jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER") {
+                pantherHB.percentage = target.hp / pantherHB.max_hp;
+                pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            } else if (target.name == "SKULL") {
+                skullHB.percentage = target.hp / skullHB.max_hp;
+                skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
             //HP cost for phys skills
             caster.takeDamage(20);
+            if (caster.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+            }
+            else if (caster.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (caster.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (caster.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -378,6 +530,30 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
             caster.takeDamage(25);
+            if (target.name == "MONA")
+            {
+
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+              
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -408,6 +584,28 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
             caster.takeDamage(22);
+            if (target.name == "MONA")
+            {
+              
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -445,6 +643,27 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -484,6 +703,27 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -523,6 +763,21 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+                        if (target.name == "MONA") {
+                monaHB.percentage = target.hp / monaHB.max_hp;
+                monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+                std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            } else if (target.name == "JOKER") {
+                jokerHB.percentage = target.hp / jokerHB.max_hp;
+                jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER") {
+                pantherHB.percentage = target.hp / pantherHB.max_hp;
+                pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            } else if (target.name == "SKULL") {
+                skullHB.percentage = target.hp / skullHB.max_hp;
+                skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -562,6 +817,27 @@ class Character {
             std::cout << target.name << " takes " << damage << " damage \n";
             target.takeDamage(damage);
             caster.reduceSP(10);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           } else {
             std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
           }
@@ -681,6 +957,27 @@ class Character {
               }
               std::cout << target.name << " takes " << damage << " damage \n\n";
               target.takeDamage(damage);
+              if (target.name == "MONA")
+              {
+                monaHB.percentage = target.hp / monaHB.max_hp;
+                monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+                std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+              }
+              else if (target.name == "JOKER")
+              {
+                jokerHB.percentage = target.hp / jokerHB.max_hp;
+                jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+              }
+              else if (target.name == "PANTHER")
+              {
+                pantherHB.percentage = target.hp / pantherHB.max_hp;
+                pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+              }
+              else if (target.name == "SKULL")
+              {
+                skullHB.percentage = target.hp / skullHB.max_hp;
+                skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+              }
             }
           }
         }
@@ -711,6 +1008,27 @@ class Character {
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
             target.takeDamage(damage);
+            if (target.name == "MONA")
+            {
+              monaHB.percentage = target.hp / monaHB.max_hp;
+              monaHB.target_length = monaHB.max_actual_length * monaHB.percentage;
+              std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
+            }
+            else if (target.name == "JOKER")
+            {
+              jokerHB.percentage = target.hp / jokerHB.max_hp;
+              jokerHB.target_length = jokerHB.max_actual_length * jokerHB.percentage;
+            }
+            else if (target.name == "PANTHER")
+            {
+              pantherHB.percentage = target.hp / pantherHB.max_hp;
+              pantherHB.target_length = pantherHB.max_actual_length * pantherHB.percentage;
+            }
+            else if (target.name == "SKULL")
+            {
+              skullHB.percentage = target.hp / skullHB.max_hp;
+              skullHB.target_length = skullHB.max_actual_length * skullHB.percentage;
+            }
           }
         }
         else {
@@ -1198,9 +1516,6 @@ class Character {
 
 };
 
-
-
-
 class gameLogic {
   public: 
     bool turnDone;
@@ -1217,6 +1532,10 @@ class gameLogic {
     }
 } game;
 
+
+
+
+
 Character characters[4] = {
   Character("JOKER", JOKER_HP, JOKER_HP, JOKER_SP, JOKER_SP, "ice", "fire", Character::JOKER_ACTIONS, false),
   Character("MONA", MONA_HP, MONA_HP, MONA_SP, MONA_SP, "electric", "wind", Character::MONA_ACTIONS, false),
@@ -1227,7 +1546,6 @@ Character characters[4] = {
 Character boss[1] = {
   Character("ARSENE", MAX_BOSS_HP, MAX_BOSS_HP, MAX_BOSS_SP, MAX_BOSS_SP, "none", "none", Character::BOSS_ACTIONS, true)
 };
-
 
 
 
@@ -1254,6 +1572,18 @@ int* generate_initiative(int);
 void render_screen();
 void display_bossHealthBar();
 void reduce_bossHealthBar();
+void reduce_monaHB();
+void reduce_jokerHB();
+void reduce_pantherHB();
+void reduce_skullHB();
+
+void render_currentHero();
+void render_monaSprite();
+void render_jokerSprite();
+void render_pantherSprite();
+void render_skullSprite();
+void render_heroHeads();
+void render_boss();
 
 int* generate_initiative(int arr[]) {
   std::random_shuffle(&arr[0], &arr[5]);
@@ -1273,6 +1603,7 @@ int main()
   for (int i = 0; i < 4; ++i) {
     std::cout << "Character " << i + 1 << " name: " << characters[i].name << std::endl;
     std::cout << "Character " << i + 1 << " HP: " << characters[i].hp << std::endl;
+    std::cout << "Target length: " << monaHB.target_length << " Actual Length: " << monaHB.actual_length << std::endl;
     std::cout << std::endl;
   }
 
@@ -1323,24 +1654,26 @@ unsigned char *buildAlphaData(Image *img)
 
 void init_opengl(void)
 {
-  //OpenGL initialization
+  // OpenGL initialization
   glViewport(0, 0, g.xres, g.yres);
-  //Initialize matrices
-  glMatrixMode(GL_PROJECTION); glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW); glLoadIdentity();
-  //This sets 2D mode (no perspective)
+  // Initialize matrices
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  // This sets 2D mode (no perspective)
   glOrtho(0, g.xres, 0, g.yres, -1, 1);
-  //Clear the screen
+  // Clear the screen
   glClearColor(1.0, 1.0, 1.0, 1.0);
-  //glClear(GL_COLOR_BUFFER_BIT);
-  //Do this to allow texture maps
+  // glClear(GL_COLOR_BUFFER_BIT);
+  // Do this to allow texture maps
   glEnable(GL_TEXTURE_2D);
   initialize_fonts();
   //
-  //load the images file into a ppm structure.
+  // load the images file into a ppm structure.
   //
   // BACKGROUND GENERATION
-  //create opengl texture elements
+  // create opengl texture elements
   /*
      g.tex.backImage = &img[0];
      glGenTextures(1, &g.tex.backTexture);
@@ -1359,52 +1692,50 @@ void init_opengl(void)
 
   /* -------- WORKING PNG VERSION -----------*/
   unsigned char *data0 = buildAlphaData(&img[0]);
-  //unsigned char *data2 = new unsigned char[h * w * 4];
+  // unsigned char *data2 = new unsigned char[h * w * 4];
   g.tex.backImage = &img[0];
   glGenTextures(1, &g.tex.backTexture);
   int w = g.tex.backImage->width;
   int h = g.tex.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.tex.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, data0);
-  //g.tex.xc[0] = 1.0;
-  //g.tex.xc[1] = 0.0;
-  //g.tex.yc[0] = 1.0;
-  //g.tex.yc[1] = 0.0;
+               GL_RGBA, GL_UNSIGNED_BYTE, data0);
+  // g.tex.xc[0] = 1.0;
+  // g.tex.xc[1] = 0.0;
+  // g.tex.yc[0] = 1.0;
+  // g.tex.yc[1] = 0.0;
   /*-----------------------------------------*/
 
   unsigned char *data1 = buildAlphaData(&img[1]);
-  //unsigned char *data2 = new unsigned char[h * w * 4];
+  // unsigned char *data2 = new unsigned char[h * w * 4];
   g.solaire.backImage = &img[1];
   glGenTextures(1, &g.solaire.backTexture);
   w = g.solaire.backImage->width;
   h = g.solaire.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.solaire.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, data1);
+               GL_RGBA, GL_UNSIGNED_BYTE, data1);
   g.solaire.xc[0] = 0.0;
   g.solaire.xc[1] = 1.0;
   g.solaire.yc[0] = 0.0;
   g.solaire.yc[1] = 1.0;
 
-
-
   unsigned char *data2 = buildAlphaData(&img[2]);
   // abyss
-  //unsigned char *data2 = new unsigned char[h * w * 4]; 
+  // unsigned char *data2 = new unsigned char[h * w * 4];
   g.abyss.backImage = &img[2];
   glGenTextures(1, &g.abyss.backTexture);
   w = g.abyss.backImage->width;
   h = g.abyss.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.abyss.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 4, w, h, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, data2);
+               GL_RGBA, GL_UNSIGNED_BYTE, data2);
   g.abyss.xc[0] = 0.0;
   g.abyss.xc[1] = 1.0;
   g.abyss.yc[0] = 0.0;
@@ -1416,21 +1747,209 @@ void init_opengl(void)
   w = g.city.backImage->width;
   h = g.city.backImage->height;
   glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      GL_RGB, GL_UNSIGNED_BYTE, g.city.backImage->data);
+               GL_RGB, GL_UNSIGNED_BYTE, g.city.backImage->data);
   g.city.xc[0] = 0.0;
   g.city.xc[1] = 1.0;
   g.city.yc[0] = 0.0;
   g.city.yc[1] = 1.0;
 
+  // mona
+  g.mona.backImage = &img[4];
+  glGenTextures(1, &g.mona.backTexture);
+  w = g.mona.backImage->width;
+  h = g.mona.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.mona.backImage->data);
+  g.mona.xc[0] = 0.0;
+  g.mona.xc[1] = 1.0;
+  g.mona.yc[0] = 0.0;
+  g.mona.yc[1] = 1.0;
+
+  // joker
+  g.joker.backImage = &img[5];
+  glGenTextures(1, &g.joker.backTexture);
+  w = g.joker.backImage->width;
+  h = g.joker.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.joker.backImage->data);
+  g.joker.xc[0] = 0.0;
+  g.joker.xc[1] = 1.0;
+  g.joker.yc[0] = 0.0;
+  g.joker.yc[1] = 1.0;
+
+  // panther
+  g.panther.backImage = &img[6];
+  glGenTextures(1, &g.panther.backTexture);
+  w = g.panther.backImage->width;
+  h = g.panther.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.panther.backImage->data);
+  g.panther.xc[0] = 0.0;
+  g.panther.xc[1] = 1.0;
+  g.panther.yc[0] = 0.0;
+  g.panther.yc[1] = 1.0;
+
+  // skull
+  g.skull.backImage = &img[7];
+  glGenTextures(1, &g.skull.backTexture);
+  w = g.skull.backImage->width;
+  h = g.skull.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.skull.backImage->data);
+  g.skull.xc[0] = 0.0;
+  g.skull.xc[1] = 1.0;
+  g.skull.yc[0] = 0.0;
+  g.skull.yc[1] = 1.0;
+
+  // arsene
+  g.arsene.backImage = &img[8];
+  glGenTextures(1, &g.arsene.backTexture);
+  w = g.arsene.backImage->width;
+  h = g.arsene.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.arsene.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.arsene.backImage->data);
+  g.arsene.xc[0] = 0.0;
+  g.arsene.xc[1] = 1.0;
+  g.arsene.yc[0] = 0.0;
+  g.arsene.yc[1] = 1.0;
+
+  g.monahead.backImage = &img[9];
+  glGenTextures(1, &g.monahead.backTexture);
+  w = g.monahead.backImage->width;
+  h = g.monahead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.monahead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.monahead.backImage->data);
+  g.monahead.xc[0] = 0.0;
+  g.monahead.xc[1] = 1.0;
+  g.monahead.yc[0] = 0.0;
+  g.monahead.yc[1] = 1.0;
+
+  g.jokerhead.backImage = &img[10];
+  glGenTextures(1, &g.jokerhead.backTexture);
+  w = g.jokerhead.backImage->width;
+  h = g.jokerhead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.jokerhead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.jokerhead.backImage->data);
+  g.jokerhead.xc[0] = 0.0;
+  g.jokerhead.xc[1] = 1.0;
+  g.jokerhead.yc[0] = 0.0;
+  g.jokerhead.yc[1] = 1.0;
+
+  g.pantherhead.backImage = &img[11];
+  glGenTextures(1, &g.pantherhead.backTexture);
+  w = g.pantherhead.backImage->width;
+  h = g.pantherhead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.pantherhead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.pantherhead.backImage->data);
+  g.pantherhead.xc[0] = 0.0;
+  g.pantherhead.xc[1] = 1.0;
+  g.pantherhead.yc[0] = 0.0;
+  g.pantherhead.yc[1] = 1.0;
+
+  g.skullhead.backImage = &img[12];
+  glGenTextures(1, &g.skullhead.backTexture);
+  w = g.skullhead.backImage->width;
+  h = g.skullhead.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.skullhead.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.skullhead.backImage->data);
+  g.skullhead.xc[0] = 0.0;
+  g.skullhead.xc[1] = 1.0;
+  g.skullhead.yc[0] = 0.0;
+  g.skullhead.yc[1] = 1.0;
 
 
+  // unsigned char *data13 = buildAlphaData(&img[13]);
+  g.arsenetext.backImage = &img[13];
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glGenTextures(1, &g.arsenetext.backTexture);
+  w = g.arsenetext.backImage->width;
+  h = g.arsenetext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.arsenetext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.arsenetext.backImage->data);
+  g.arsenetext.xc[0] = 0.0;
+  g.arsenetext.xc[1] = 1.0;
+  g.arsenetext.yc[0] = 0.0;
+  g.arsenetext.yc[1] = 1.0;
 
+  unsigned char *data14 = buildAlphaData(&img[14]);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.jokertext.backImage = &img[14];
+  glGenTextures(1, &g.jokertext.backTexture);
+  w = g.jokertext.backImage->width;
+  h = g.jokertext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.jokertext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.jokertext.backImage->data);
+  g.jokertext.xc[0] = 0.0;
+  g.jokertext.xc[1] = 1.0;
+  g.jokertext.yc[0] = 0.0;
+  g.jokertext.yc[1] = 1.0;
 
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.monatext.backImage = &img[15];
+  glGenTextures(1, &g.monatext.backTexture);
+  w = g.monatext.backImage->width;
+  h = g.monatext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.monatext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.monatext.backImage->data);
+  g.monatext.xc[0] = 0.0;
+  g.monatext.xc[1] = 1.0;
+  g.monatext.yc[0] = 0.0;
+  g.monatext.yc[1] = 1.0;
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.panthertext.backImage = &img[15];
+  glGenTextures(1, &g.panthertext.backTexture);
+  w = g.panthertext.backImage->width;
+  h = g.panthertext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.panthertext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.panthertext.backImage->data);
+  g.panthertext.xc[0] = 0.0;
+  g.panthertext.xc[1] = 1.0;
+  g.panthertext.yc[0] = 0.0;
+  g.panthertext.yc[1] = 1.0;
 }
-
 
 void init() {
 
@@ -1549,6 +2068,8 @@ void play_game()
 			render_actual();
 			render();
 			physics();
+
+   
 			x11.swapBuffers();
 		}
 		i++;
@@ -1740,8 +2261,8 @@ void display_battleMenu() {
 	glColor3ub(0, 24, 62);
 	glBegin(GL_QUADS); 
 	glVertex2i(0, g.yres/4); // topleft: (x,y)
-	glVertex2i(g.xres, g.yres/4); // topright: (x,y)
-	glVertex2i(g.xres, 0); // botright: (x,y)
+	glVertex2i(g.xres + 10, g.yres/4); // topright: (x,y)
+	glVertex2i(g.xres + 10, 0); // botright: (x,y)
 	glVertex2i(0, 0); // botleft: (x,y)
 	glEnd();
 	// main container inner
@@ -1754,47 +2275,118 @@ void display_battleMenu() {
 	glDisable(GL_BLEND);
 	glEnd();
 
+  int width = 500;
+  int height = 100;
+  int x = 15;
+  int y = (g.yres/4) - 10;
+
+  glColor3f(1.0, 1.0, 1.0);
+  glEnable(GL_TEXTURE_2D);
+
+  if (game.currentActor == 0)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.monatext.backTexture);
+  }
+  else if (game.currentActor == 1)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.jokertext.backTexture);
+  }
+  else if (game.currentActor == 2)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  }
+  else if (game.currentActor == 3)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  }
+  else if (game.currentActor == 4)
+  {
+    return;
+  }
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 1.0); glVertex2i(10,10); // botleft: (x,y)
+  glTexCoord2f(1.0, 1.0); glVertex2i(g.xres - 10, 10); // botright: (x,y)
+  glTexCoord2f(1.0, 0.0); glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
+  glTexCoord2f(0.0, 0.0); 	glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
+	glDisable(GL_BLEND);
+	glEnd();
+
+  // x11.swapBuffers();
   // glXSwapBuffers(x11.dpy, x11.win);
   // usleep(1000);
   // std::cout << "Battle Menu init" << std::endl;
 }
 
-void display_bossHealthBar() {
-	glEnable(GL_BLEND);
-	// boss health bar container
-	glColor3ub(0, 0, 0);
-	glBegin(GL_QUADS); 
-	glVertex2i(20, g.yres-40); // topleft: (x,y)
-	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
-	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
-	glVertex2i(20, g.yres-80); // botleft: (x,y)
-	glEnd();
+// void display_bossHealthBar() {
+// 	glEnable(GL_BLEND);
+// 	// boss health bar container
+// 	glColor3ub(0, 0, 0);
+// 	glBegin(GL_QUADS); 
+// 	glVertex2i(20, g.yres-40); // topleft: (x,y)
+// 	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
+// 	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
+// 	glVertex2i(20, g.yres-80); // botleft: (x,y)
+// 	glEnd();
 
 
-	bossBar.current_health = boss[0].hp;
-	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
-	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
-	// std::cout << boss[0].max_hp << std::endl;
-	// std::cout << boss[0].hp << std::endl;
-	// std::cout << g.xres/2 - 10 << std::endl;
-	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
-	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
+// 	bossBar.current_health = boss[0].hp;
+// 	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
+// 	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
+// 	// std::cout << boss[0].max_hp << std::endl;
+// 	// std::cout << boss[0].hp << std::endl;
+// 	// std::cout << g.xres/2 - 10 << std::endl;
+// 	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
+// 	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
 	
 
-	// healthbar
-	glBegin(GL_QUADS); 
-	glColor3ub(238, 75, 62);
-	glVertex2i(32, g.yres-45); // topleft: (x,y)
-	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
-	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
-	glVertex2i(32, g.yres-75); // botleft: (x,y)
-	glEnd();
-	glDisable(GL_BLEND);
+// 	// healthbar
+// 	glBegin(GL_QUADS); 
+// 	glColor3ub(238, 75, 62);
+// 	glVertex2i(32, g.yres-45); // topleft: (x,y)
+// 	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
+// 	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
+// 	glVertex2i(32, g.yres-75); // botleft: (x,y)
+// 	glEnd();
+// 	glDisable(GL_BLEND);
 
-}
+// }
 
 void reduce_bossHealthBar() {
 		bossBar.previous_health = bossBar.previous_health - 2.0;
+}
+
+void reduce_monaHB()
+{
+  //std::cout << "<Mona> actual: " << monaHB.actual_length << "<Mona> Target: " << monaHB.target_length << std::endl;
+  monaHB.actual_length = monaHB.actual_length - 1.0;
+  monaHB.hb_length = monaHB.hb_length - 1.0;
+}
+
+void reduce_jokerHB()
+{
+  //std::cout << "Joker actual: " << jokerHB.actual_length << "Joker Target: " << jokerHB.target_length << std::endl;
+  jokerHB.actual_length = jokerHB.actual_length - 1.0;
+  jokerHB.hb_length = jokerHB.hb_length - 1.0;
+}
+
+void reduce_pantherHB()
+{
+  //std::cout << "Panther actual: " << pantherHB.actual_length << "Panther Target: " << pantherHB.target_length << std::endl;
+  pantherHB.actual_length = pantherHB.actual_length - 1.0;
+  pantherHB.hb_length = pantherHB.hb_length - 1.0;
+}
+
+void reduce_skullHB()
+{
+  //std::cout << "Skull actual: " << skullHB.actual_length << "Skull Target: " << skullHB.target_length << std::endl;
+  skullHB.actual_length = skullHB.actual_length - 1.0;
+  skullHB.hb_length = skullHB.hb_length - 1.0;
 }
 
 //Function to Display Main Menu
@@ -1820,7 +2412,7 @@ void display_menu() {
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(0, 0, 0, 1);
   // REMOVE TO SEE INTRO
-  g.introDone = 0;
+  g.introDone = 1;
   if (!g.introDone) {
     while (elapsedTime < introDuration) {
       now = time(NULL);
@@ -1850,6 +2442,7 @@ void display_menu() {
 
       // ----- Texture on box ----- //
       glBindTexture(GL_TEXTURE_2D, g.city.backTexture);
+
       glBegin(GL_QUADS);
       // 0,0 = top left
       // 1,1 = bottom right
@@ -1969,30 +2562,417 @@ void physics()
 {
 }
 
+void render_heroHeads()
+{
+  // glColor3ub(1, 1, 1);
+  glEnable(GL_TEXTURE_2D);
 
-void render_actual() {
-        glClearColor(1.0, 1.0, 1.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glColor3f(1.0, 1.0, 1.0);
-        display_battleMenu();
-		display_hp();
+  // ====================== Mona ======================
+  glBindTexture(GL_TEXTURE_2D, g.monahead.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h1x + hh.width, hh.h1y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h1x + hh.width, hh.h1y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h1x, hh.h1y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h1x, hh.h1y + hh.height);
+  glEnd();
 
-		display_bossHealthBar();
-     
-		
-		
+  // health bar container
+    glColor3ub(0, 0, 0);
+  glBegin(GL_QUADS);
+  glVertex2i(hh.h1x + hh.width, hh.h1y - 20); // botright
+  glVertex2i(hh.h1x + hh.width, hh.h1y - 5);  // top right
+  glVertex2i(hh.h1x, hh.h1y - 5);             // top left
+  glVertex2i(hh.h1x, hh.h1y - 20);            // bot left
+  glEnd();
 
-		x11.swapBuffers();
+  monaHB.current_health = characters[1].hp;
+
+  // std::cout << "Percentage: " << monaHB.percentage << std::endl;
+  // std::cout << "length: " << monaHB.hb_length << std::endl;
+  // std::cout << "length after: " << monaHB.hb_length << std::endl;
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(monaHB.hb_length, hh.h1y - 18); // botright
+  glVertex2i(monaHB.hb_length, hh.h1y - 7);  // top right
+  glVertex2i(hh.h1x + 2, hh.h1y - 7);             // top left
+  glVertex2i(hh.h1x + 2, hh.h1y - 18);            // bot left
+  glEnd();
+  // ==================================================
+
+  glColor3f(1.0, 1.0, 1.0);
+
+  // ====================== Joker ======================
+  glBindTexture(GL_TEXTURE_2D, g.jokerhead.backTexture);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h2x + hh.width, hh.h2y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h2x + hh.width, hh.h2y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h2x, hh.h2y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h2x, hh.h2y + hh.height);
+  glEnd();
+
+  jokerHB.current_health = characters[2].hp;
+
+  // healthbar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h2x + hh.width, hh.h2y - 20); // botright
+  glVertex2i(hh.h2x + hh.width, hh.h2y - 5);  // top right
+  glVertex2i(hh.h2x, hh.h2y - 5);             // top left
+  glVertex2i(hh.h2x, hh.h2y - 20);            // bot left
+  glEnd();
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(jokerHB.hb_length, hh.h2y - 18); // botright
+  glVertex2i(jokerHB.hb_length, hh.h2y - 7);  // top right
+  glVertex2i(hh.h2x + 2, hh.h2y - 7);             // top left
+  glVertex2i(hh.h2x + 2, hh.h2y - 18);            // bot left
+  glEnd();
+  // ===================================================
+
+  glColor3f(1.0, 1.0, 1.0);
+
+  // ====================== Panther ======================
+  glBindTexture(GL_TEXTURE_2D, g.pantherhead.backTexture);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h3x + hh.width, hh.h3y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h3x + hh.width, hh.h3y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h3x, hh.h3y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h3x, hh.h3y + hh.height);
+  glEnd();
+
+  // healthbar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h3x + hh.width, hh.h3y - 20); // botright
+  glVertex2i(hh.h3x + hh.width, hh.h3y - 5);  // top right
+  glVertex2i(hh.h3x, hh.h3y - 5);             // top left
+  glVertex2i(hh.h3x, hh.h3y - 20);            // bot left
+  glEnd();
+
+  pantherHB.current_health = characters[3].hp;
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(pantherHB.hb_length, hh.h3y - 18); // botright
+  glVertex2i(pantherHB.hb_length, hh.h3y - 7);  // top right
+  glVertex2i(hh.h3x + 2, hh.h3y - 7);             // top left
+  glVertex2i(hh.h3x + 2, hh.h3y - 18);            // bot left
+  glEnd();
+  // =====================================================
+
+  glColor3f(1.0, 1.0, 1.0);
+
+  // ====================== Skull ======================
+  glBindTexture(GL_TEXTURE_2D, g.skullhead.backTexture);
+  glBegin(GL_QUADS);
+  // 1, 0 = bottom right
+  // 1, 1 = top right
+  // 0, 1 = top left
+  // 0, 0 = bottom left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(hh.h4x + hh.width, hh.h4y + hh.height);
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(hh.h4x + hh.width, hh.h4y);
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(hh.h4x, hh.h4y);
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(hh.h4x, hh.h4y + hh.height);
+  glEnd();
+
+
+  // healthbar container
+  glBegin(GL_QUADS);
+  glColor3ub(0, 0, 0);
+  glVertex2i(hh.h4x + hh.width, hh.h4y - 20); // botright
+  glVertex2i(hh.h4x + hh.width, hh.h4y - 5);  // top right
+  glVertex2i(hh.h4x, hh.h4y - 5);             // top left
+  glVertex2i(hh.h4x, hh.h4y - 20);            // bot left
+  glEnd();
+
+  skullHB.current_health = characters[4].hp;
+
+  // health bar
+  glBegin(GL_QUADS);
+  glColor3ub(238, 75, 62);
+  glVertex2i(skullHB.hb_length, hh.h4y - 18); // botright
+  glVertex2i(skullHB.hb_length, hh.h4y - 7);  // top right
+  glVertex2i(hh.h4x + 2, hh.h4y - 7);             // top left
+  glVertex2i(hh.h4x + 2, hh.h4y - 18);            // bot left
+  glEnd();
+
+  // ===================================================
+
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+void render_monaSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s1x, hs.s1y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s1x + hs.width, hs.s1y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s1x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s1x, 0);
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+void render_jokerSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s2x, hs.s2y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s2x + hs.width, hs.s2y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s2x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s2x, 0);
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+void render_pantherSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s3x, hs.s3y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s3x + hs.width, hs.s3y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s3x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s3x, 0);
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+void render_skullSprite()
+{
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(0.0, 0.0); glVertex2i(hs.s4x, hs.s4y);
+  glTexCoord2f(1.0, 0.0); glVertex2i(hs.s4x + hs.width, hs.s4y);
+  glTexCoord2f(1.0, 1.0); glVertex2i(hs.s4x + hs.width,  0);
+  glTexCoord2f(0.0, 1.0); glVertex2i(hs.s4x, 0);
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+void render_currentHero() {
+  glEnable(GL_TEXTURE_2D);
+  glColor3f(1.0, 1.0, 1.0);
+  //std::cout << " Current actor: " << game.currentActor << std::endl;
+  if (game.currentActor == 0) {
+    glBindTexture(GL_TEXTURE_2D, g.mona.backTexture);
+  }
+  else if (game.currentActor == 1)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.joker.backTexture);
+  }
+  else if (game.currentActor == 2)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+  }
+  else if (game.currentActor == 3)
+  {
+    glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+  } 
+  else if (game.currentActor == 4)
+  {
+    return;
+  } 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  int x = g.xres/2 + 200;
+  int y = g.yres/4 + 10;
+  int width = 150;
+  int height = g.yres - 100;
+
+  glTexCoord2f(0.0, 1.0); glVertex2i(x, y); // bot left
+  glTexCoord2f(1.0, 1.0); glVertex2i(x + width, y); // bot right
+  glTexCoord2f(1.0, 0.0); glVertex2i(x + width, height); // top right
+  glTexCoord2f(0.0, 0.0); glVertex2i(x, height); // top left
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+void display_bossHealthBar() {
+  glColor3f(1.0, 1.0, 1.0);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.arsenetext.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  int width = bossBar.hb_container_length / 2;
+  glTexCoord2f(0.0, 1.0); glVertex2i(20, g.yres - 30); // bot left
+  glTexCoord2f(1.0, 1.0); glVertex2i(20 + width, g.yres - 30); // bot right
+  glTexCoord2f(1.0, 0.0); glVertex2i(20 + width,  g.yres - 5); // top right
+  glTexCoord2f(0.0, 0.0); glVertex2i(20, g.yres - 5); // top left
+
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+
+
+	glEnable(GL_BLEND);
+
+	glColor3ub(0, 0, 0);
+	glBegin(GL_QUADS); 
+	glVertex2i(20, g.yres-40); // topleft: (x,y)
+	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
+	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
+	glVertex2i(20, g.yres-80); // botleft: (x,y)
+	glEnd();
+
+
+	bossBar.current_health = boss[0].hp;
+	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
+	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
+	// std::cout << boss[0].max_hp << std::endl;
+	// std::cout << boss[0].hp << std::endl;
+	// std::cout << g.xres/2 - 10 << std::endl;
+	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
+	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
+	
+
+	// healthbar
+	glBegin(GL_QUADS); 
+	glColor3ub(238, 75, 62);
+	glVertex2i(32, g.yres-45); // topleft: (x,y)
+	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
+	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
+	glVertex2i(32, g.yres-75); // botleft: (x,y)
+	glEnd();
+	glDisable(GL_BLEND);
+
+}
+
+void render_boss() {
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.arsene.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+  // 1, 1 = top right
+  // 1, 0 = bottom right
+  // 0, 0 = bottom left
+  // 0, 1 = top left
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(g.xres / 2, g.yres / 4 + 10); // bot right
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(g.xres / 2, g.yres - 100); // top right
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(5, g.yres - 100); // top left
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(5, g.yres / 4 + 10); // bot left
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+}
+
+
+void render_actual()
+{
+  glClearColor(1.0, 1.0, 1.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glColor3f(1.0, 1.0, 1.0);
+  XEvent e = x11.getXNextEvent();
+  x11.check_resize(&e);
+  // render_monaSprite();
+  // render_jokerSprite();
+  // render_pantherSprite();
+  // render_skullSprite();
+  render_currentHero();
+  display_battleMenu();
+  render_boss();
+  render_heroHeads();
+  display_bossHealthBar();
+  render_currentHero();
+
+  x11.swapBuffers();
 }
 void render()
 {
-	/*
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
-	display_battleMenu();
-	display_hp();
-	*/
+
 	Rect r;
 	// Set the position for displaying HP in the top left corner
 	r.bot = g.yres - 20;
@@ -2007,29 +2987,57 @@ void render()
 		x11.swapBuffers();
 	}
 
+  while (monaHB.target_length < monaHB.actual_length)
+	{
+		reduce_monaHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+  while (jokerHB.target_length < jokerHB.actual_length)
+	{
+		reduce_jokerHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+
+    while (pantherHB.target_length < pantherHB.actual_length)
+	{
+		reduce_pantherHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+    while (skullHB.target_length < skullHB.actual_length)
+	{
+		reduce_skullHB();
+    render_heroHeads();
+		x11.swapBuffers();
+	}
+
+
+  std::cout << "Mona HP: " << characters[1].hp << std::endl;
   if (game.currentActor == 0) {
     characters[0].selectAction(characters, boss, 0);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 1) {
     characters[1].selectAction(characters, boss, 1);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 2) {
     characters[2].selectAction(characters, boss, 2);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 3 for queen actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 3) {
     characters[3].selectAction(characters, boss, 3);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 4 for skull actions");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 4 for skull actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 4) {
     boss[0].selectAction(characters, boss, 4);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 5 for boss to attack all");
+    // ggprint8b(&r, 16, 0xFFFFFF, "press 5 for boss to attack all");
     r.bot -= 20;
     game.turnDone = 1;
   }
