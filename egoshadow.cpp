@@ -36,15 +36,15 @@
 #define WHITE 0xffffff;
 
 // Define constants for maximum HP values
-const int MAX_BOSS_HP = 1000;
-const int MAX_BOSS_SP = 100;
+const int MAX_BOSS_HP = 10000;
+const int MAX_BOSS_SP = 1000;
 
 const int JOKER_HP = 159;
 const int JOKER_SP = 101;
 const int MONA_HP = 139;
 const int MONA_SP = 105;
-const int PANTHER_HP = 171;
-const int PANTHER_SP = 95;
+const int QUEEN_HP = 171;
+const int QUEEN_SP = 95;
 const int SKULL_HP = 205;
 const int SKULL_SP = 127;
 class Global;
@@ -255,7 +255,7 @@ class X11_wrapper {
 class Character {
   private:
   public:
-    enum ActionList { JOKER_ACTIONS, MONA_ACTIONS, PANTHER_ACTIONS, SKULL_ACTIONS, BOSS_ACTIONS };
+    enum ActionList { JOKER_ACTIONS, MONA_ACTIONS, QUEEN_ACTIONS, SKULL_ACTIONS, BOSS_ACTIONS };
     ActionList actionList;
 
     // Character Constructor
@@ -645,14 +645,10 @@ class Character {
       if (!caster.isDowned) {
         if (!target.isDowned) {
           if (target.sp < target.max_sp) {
-            if (caster.sp >= 10) {
               std::cout << caster.name << " uses an SP Drop!\n";
               int healSP = rand() % 5 + 21;
               std::cout << target.name << " restores " << healSP << " SP\n";
               target.healSP(healSP);
-            } else {
-              std::cout << caster.name << " Not enough SP to cast the spell!\n\n";
-            }
           } else {
             std::cout << target.name << " is already at full SP!\n\n";
           }
@@ -805,9 +801,10 @@ class Character {
                                             bool validTarget = false;
                                             while (!validTarget) {
                                               std::cout << "Select a target:\n";
-                                              std::cout << "1. MONA\n";
-                                              std::cout << "2. PANTHER\n";
-                                              std::cout << "3. SKULL\n";
+                                              std::cout << "1. JOKER\n";
+                                              std::cout << "2. MONA\n";
+                                              std::cout << "3. QUEEN\n";
+                                              std::cout << "4. SKULL\n";
                                               while (!target)
                                               {
                                                 XEvent e = x11.getXNextEvent();
@@ -815,15 +812,19 @@ class Character {
                                               }
                                               switch (target) {
                                                 case 1:
-                                                  characters[0].cure(characters[0], characters[1]);
+                                                  characters[0].cure(characters[0], characters[0]);
                                                   validTarget = true;
                                                   break;
                                                 case 2:
-                                                  characters[0].cure(characters[0], characters[2]);
+                                                  characters[0].cure(characters[0], characters[1]);
                                                   validTarget = true;
                                                   break;
                                                 case 3:
-                                                  characters[0].cure(characters[0], characters[3]);
+                                                  characters[0].cure(characters[0], characters[2]);
+                                                  validTarget = true;
+                                                  break;
+                                                case 4:
+                                                  characters[0].cure(characters[0], characters[2]);
                                                   validTarget = true;
                                                   break;
                                                 default:
@@ -871,29 +872,34 @@ class Character {
                                            while (!validTarget) {
                                              std::cout << "Select a target:\n";
                                              std::cout << "1. JOKER\n";
-                                             std::cout << "2. PANTHER\n";
-                                             std::cout << "3. SKULL\n";
+                                             std::cout << "2. MONA\n";
+                                             std::cout << "3. QUEEN\n";
+                                             std::cout << "4. SKULL\n";
                                              while (!target)
                                              {
                                                XEvent e = x11.getXNextEvent();
                                                target = check_keys2(&e);
                                              }
                                              switch (target) {
-                                               case 1:
-                                                 characters[1].cure(characters[1], characters[0]);
-                                                 validTarget = true;
-                                                 break;
-                                               case 2:
-                                                 characters[1].cure(characters[1], characters[2]); 
-                                                 validTarget = true;
-                                                 break;
-                                               case 3:
-                                                 characters[1].cure(characters[1], characters[3]);
-                                                 validTarget = true;
-                                                 break;
-                                               default:
-                                                 std::cout << "Invalid target!\n";
-                                                 break;
+                                                case 1:
+                                                  characters[2].cure(characters[2], characters[0]);
+                                                  validTarget = true;
+                                                  break;
+                                                case 2:
+                                                  characters[2].cure(characters[2], characters[1]);
+                                                  validTarget = true;
+                                                  break;
+                                                case 3:
+                                                  characters[2].cure(characters[2], characters[2]);
+                                                  validTarget = true;
+                                                  break;
+                                                case 4:
+                                                  characters[2].cure(characters[2], characters[3]);
+                                                  validTarget = true;
+                                                  break;
+                                                default:
+                                                  std::cout << "Invalid target!\n";
+                                                  break;
                                              }
                                            }
                                            validAction = true;
@@ -905,7 +911,7 @@ class Character {
                                            while (!validTarget) {
                                              std::cout << "Select a target:\n";
                                              std::cout << "1. JOKER\n";
-                                             std::cout << "2. PANTHER\n";
+                                             std::cout << "2. QUEEN\n";
                                              std::cout << "3. SKULL\n";
                                              while (!target)
                                              {
@@ -940,15 +946,15 @@ class Character {
                              }
                              break;
                            }
-                           // PANTHER's Turns
-        case PANTHER_ACTIONS: {
+                           // QUEEN's Turns
+        case QUEEN_ACTIONS: {
                                 int action = NULL;
                                 bool validAction = false;
                                 while (!validAction){
-                                  std::cout << "What should PANTHER do?\n";
+                                  std::cout << "What should QUEEN do?\n";
                                   std::cout << "1. SOLAR\n";
                                   std::cout << "2. SHOT\n";
-                                  std::cout << "3. Cure\n";
+                                  std::cout << "3. SPDrop\n";
                                   while (!action)
                                   {
                                     XEvent e = x11.getXNextEvent();
@@ -975,7 +981,8 @@ class Character {
                                                 std::cout << "Select a target:\n";
                                                 std::cout << "1. JOKER\n";
                                                 std::cout << "2. MONA\n";
-                                                std::cout << "3. SKULL\n";
+                                                std::cout << "3. QUEEN\n";
+                                                std::cout << "4. SKULL\n";
                                                 while (!target)
                                                 {
                                                   XEvent e = x11.getXNextEvent();
@@ -984,15 +991,19 @@ class Character {
                                                 switch (target)
                                                 {
                                                   case 1:
-                                                    characters[2].cure(characters[2], characters[0]);
+                                                    characters[2].spDrop(characters[2], characters[0]);
                                                     validTarget = true;
                                                     break;
                                                   case 2:
-                                                    characters[2].cure(characters[2], characters[1]);
+                                                    characters[2].spDrop(characters[2], characters[1]);
                                                     validTarget = true;
                                                     break;
                                                   case 3:
-                                                    characters[2].cure(characters[2], characters[3]);
+                                                    characters[2].spDrop(characters[2], characters[2]);
+                                                    validTarget = true;
+                                                    break;
+                                                  case 4:
+                                                    characters[2].spDrop(characters[2], characters[3]);
                                                     validTarget = true;
                                                     break;
                                                   default:
@@ -1209,7 +1220,7 @@ class gameLogic {
 Character characters[4] = {
   Character("JOKER", JOKER_HP, JOKER_HP, JOKER_SP, JOKER_SP, "ice", "fire", Character::JOKER_ACTIONS, false),
   Character("MONA", MONA_HP, MONA_HP, MONA_SP, MONA_SP, "electric", "wind", Character::MONA_ACTIONS, false),
-  Character("PANTHER", PANTHER_HP, PANTHER_HP, PANTHER_SP, PANTHER_SP, "wind", "fire", Character::PANTHER_ACTIONS, false),
+  Character("QUEEN", QUEEN_HP, QUEEN_HP, QUEEN_SP, QUEEN_SP, "wind", "fire", Character::QUEEN_ACTIONS, false),
   Character("SKULL", SKULL_HP, SKULL_HP, SKULL_SP, SKULL_SP, "fire", "electric", Character::SKULL_ACTIONS, false),
 };
 
@@ -2008,7 +2019,7 @@ void render()
     game.turnDone = 1;
   } else if (game.currentActor == 2) {
     characters[2].selectAction(characters, boss, 2);
-    ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
+    ggprint8b(&r, 16, 0xFFFFFF, "press 3 for queen actions");
     r.bot -= 20;
     game.turnDone = 1;
   } else if (game.currentActor == 3) {
