@@ -116,7 +116,7 @@ class Image {
       unlink(ppmname);
     }
 };
-Image img[17] = {
+Image img[18] = {
   "fixed_titlecard.png", 
   "solaire.png", 
   "abyss.png", 
@@ -133,7 +133,8 @@ Image img[17] = {
   "arsenetext.png",
   "jokertext.png",
   "monatext.png",
-  "panthertext.png"
+  "panthertext.png",
+  "skulltext.png"
   };
 
 class Texture {
@@ -162,6 +163,7 @@ class Global {
     Texture jokertext;
     Texture monatext;
     Texture panthertext;
+    Texture skulltext;
 
     Texture monahead;
     Texture jokerhead;
@@ -200,6 +202,17 @@ class BossHealthBar {
 	}
 } bossBar;
 
+class bossStatus {
+public:
+  int takeDamage;
+  int dealDamage;
+  bossStatus()
+  {
+    takeDamage = 0;
+    dealDamage = 0;
+  }
+
+} bossStatus;
 
 class X11_wrapper {
 	public:
@@ -366,7 +379,7 @@ public:
 
 heroHealthBars monaHB(MONA_HP, (hh.h1x + hh.width - 2), (hh.h1x + 2));
 heroHealthBars jokerHB(JOKER_HP, (hh.h2x + hh.width - 2), (hh.h2x + 2));
-heroHealthBars pantherHB(PANTHER_HP, (hh.h3x + hh.width - 2), (hh.h3x + 2));
+heroHealthBars pantherHB(QUEEN_HP, (hh.h3x + hh.width - 2), (hh.h3x + 2));
 heroHealthBars skullHB(SKULL_HP, (hh.h4x + hh.width - 2), (hh.h4x + 2));
 
 
@@ -1577,6 +1590,7 @@ void reduce_jokerHB();
 void reduce_pantherHB();
 void reduce_skullHB();
 
+
 void render_currentHero();
 void render_monaSprite();
 void render_jokerSprite();
@@ -1584,6 +1598,7 @@ void render_pantherSprite();
 void render_skullSprite();
 void render_heroHeads();
 void render_boss();
+void render_boss_status(int, int, int);
 
 int* generate_initiative(int arr[]) {
   std::random_shuffle(&arr[0], &arr[5]);
@@ -1949,6 +1964,21 @@ void init_opengl(void)
   g.panthertext.xc[1] = 1.0;
   g.panthertext.yc[0] = 0.0;
   g.panthertext.yc[1] = 1.0;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.skulltext.backImage = &img[16];
+  glGenTextures(1, &g.skulltext.backTexture);
+  w = g.skulltext.backImage->width;
+  h = g.skulltext.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.skulltext.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.skulltext.backImage->data);
+  g.skulltext.xc[0] = 0.0;
+  g.skulltext.xc[1] = 1.0;
+  g.skulltext.yc[0] = 0.0;
+  g.skulltext.yc[1] = 1.0;
 }
 
 void init() {
@@ -2068,8 +2098,6 @@ void play_game()
 			render_actual();
 			render();
 			physics();
-
-   
 			x11.swapBuffers();
 		}
 		i++;
@@ -2275,6 +2303,7 @@ void display_battleMenu() {
 	glDisable(GL_BLEND);
 	glEnd();
 
+
   int width = 500;
   int height = 100;
   int x = 15;
@@ -2285,19 +2314,23 @@ void display_battleMenu() {
 
   if (game.currentActor == 0)
   {
+    std::cout << "Current actor: " << game.currentActor << std::endl;
     glBindTexture(GL_TEXTURE_2D, g.monatext.backTexture);
   }
   else if (game.currentActor == 1)
   {
+    std::cout << "Current actor: " << game.currentActor << std::endl;
     glBindTexture(GL_TEXTURE_2D, g.jokertext.backTexture);
   }
   else if (game.currentActor == 2)
   {
-    glBindTexture(GL_TEXTURE_2D, g.panther.backTexture);
+    std::cout << "Current actor: " << game.currentActor << std::endl;
+    glBindTexture(GL_TEXTURE_2D, g.panthertext.backTexture);
   }
   else if (game.currentActor == 3)
   {
-    glBindTexture(GL_TEXTURE_2D, g.skull.backTexture);
+    std::cout << "Current actor: " << game.currentActor << std::endl;
+    glBindTexture(GL_TEXTURE_2D, g.skulltext.backTexture);
   }
   else if (game.currentActor == 4)
   {
@@ -2311,9 +2344,9 @@ void display_battleMenu() {
   // 0, 0 = bottom left
   // 0, 1 = top left
   glTexCoord2f(0.0, 1.0); glVertex2i(10,10); // botleft: (x,y)
-  glTexCoord2f(1.0, 1.0); glVertex2i(g.xres - 10, 10); // botright: (x,y)
-  glTexCoord2f(1.0, 0.0); glVertex2i(g.xres - 10, (g.yres/4) - 10); // topright: (x,y)
-  glTexCoord2f(0.0, 0.0); 	glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
+  glTexCoord2f(1.0, 1.0); glVertex2i(g.xres / 2, 10); // botright: (x,y)
+  glTexCoord2f(1.0, 0.0); glVertex2i(g.xres / 2, (g.yres/4) - 10); // topright: (x,y)
+  glTexCoord2f(0.0, 0.0); glVertex2i(10, (g.yres/4) - 10); // topleft: (x,y)
 	glDisable(GL_BLEND);
 	glEnd();
 
@@ -2322,40 +2355,6 @@ void display_battleMenu() {
   // usleep(1000);
   // std::cout << "Battle Menu init" << std::endl;
 }
-
-// void display_bossHealthBar() {
-// 	glEnable(GL_BLEND);
-// 	// boss health bar container
-// 	glColor3ub(0, 0, 0);
-// 	glBegin(GL_QUADS); 
-// 	glVertex2i(20, g.yres-40); // topleft: (x,y)
-// 	glVertex2i(bossBar.hb_container_length, g.yres-40); // topright: (x,y)
-// 	glVertex2i(bossBar.hb_container_length, g.yres-80); // botright: (x,y)
-// 	glVertex2i(20, g.yres-80); // botleft: (x,y)
-// 	glEnd();
-
-
-// 	bossBar.current_health = boss[0].hp;
-// 	bossBar.percentage = bossBar.previous_health / bossBar.max_hp;
-// 	bossBar.hb_length = bossBar.hb_max_length * bossBar.percentage;
-// 	// std::cout << boss[0].max_hp << std::endl;
-// 	// std::cout << boss[0].hp << std::endl;
-// 	// std::cout << g.xres/2 - 10 << std::endl;
-// 	// std::cout << "previous --->" << bossBar.previous_health << std::endl;
-// 	// std::cout << "Current Percentage: " << bossBar.percentage << std::endl;
-	
-
-// 	// healthbar
-// 	glBegin(GL_QUADS); 
-// 	glColor3ub(238, 75, 62);
-// 	glVertex2i(32, g.yres-45); // topleft: (x,y)
-// 	glVertex2i(bossBar.hb_length, g.yres-45); // topright: (x,y) X NEEDS TO CHANGE 
-// 	glVertex2i(bossBar.hb_length, g.yres-75); // botright: (x,y) X NEEDS TO CHANGE
-// 	glVertex2i(32, g.yres-75); // botleft: (x,y)
-// 	glEnd();
-// 	glDisable(GL_BLEND);
-
-// }
 
 void reduce_bossHealthBar() {
 		bossBar.previous_health = bossBar.previous_health - 2.0;
@@ -2869,6 +2868,43 @@ void render_currentHero() {
   glDisable(GL_TEXTURE_2D);
 }
 
+void render_boss_status(int damageDealt, int damageTaken, int type)
+{
+
+  // 0 = took damage
+  // 1 = dealt damage
+
+  x11.swapBuffers();
+  Rect r;
+  r.bot = g.yres - 30;
+  r.left = 80 + (bossBar.hb_container_length / 2);
+  r.center = 1;
+  unsigned int color = 0xffffff;
+  std::string string1;
+  std::string string2;
+  std::string damageString;
+  std::cout << "Init damage dealt: " << damageDealt << " damage taken: " << damageTaken << " type: " << type << std::endl;
+  if (type == 0)
+  {
+    std::cout << "Taking damage...." << std::endl;
+    string1 = "Arsene took ";
+    string2 = std::to_string(damageTaken);
+    std::cout << "damage cast : " << string2 << std::endl;
+  }
+  else if (type == 1)
+  {
+    std::cout << "Dealing damage...." << std::endl;
+    string1 = "Arsene dealt ";
+    string2 = std::to_string(damageDealt);
+  }
+  
+  damageString = " damage!";
+  std::string fullString = string1 + string2;
+  const char *finishedString = fullString.c_str();
+  std::cout << "Full damage string " << fullString << std::endl;
+  ggprint13(&r, 45, 0x00ff0000, finishedString);
+}
+
 void display_bossHealthBar() {
   glColor3f(1.0, 1.0, 1.0);
   glEnable(GL_TEXTURE_2D);
@@ -2876,6 +2912,8 @@ void display_bossHealthBar() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBegin(GL_QUADS);
+
+
   // 1, 1 = top right
   // 1, 0 = bottom right
   // 0, 0 = bottom left
@@ -2947,6 +2985,7 @@ void render_boss() {
   glEnd();
   glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
+
 }
 
 
@@ -2967,9 +3006,11 @@ void render_actual()
   render_heroHeads();
   display_bossHealthBar();
   render_currentHero();
-
+  render_boss_status(100, 100, 0);
   x11.swapBuffers();
 }
+
+
 void render()
 {
 
@@ -3017,28 +3058,36 @@ void render()
   std::cout << "Mona HP: " << characters[1].hp << std::endl;
   if (game.currentActor == 0) {
     characters[0].selectAction(characters, boss, 0);
-    // ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
+    //ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
     r.bot -= 20;
+    display_battleMenu();
+    render_boss_status(100, 100, 0);
     game.turnDone = 1;
   } else if (game.currentActor == 1) {
     characters[1].selectAction(characters, boss, 1);
     // ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
     r.bot -= 20;
+    display_battleMenu();
+    render_boss_status(100, 100, 0);
     game.turnDone = 1;
   } else if (game.currentActor == 2) {
     characters[2].selectAction(characters, boss, 2);
     // ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
     r.bot -= 20;
+    display_battleMenu();
+    render_boss_status(100, 100, 0);
     game.turnDone = 1;
   } else if (game.currentActor == 3) {
     characters[3].selectAction(characters, boss, 3);
     // ggprint8b(&r, 16, 0xFFFFFF, "press 4 for skull actions");
     r.bot -= 20;
+    display_battleMenu();
     game.turnDone = 1;
   } else if (game.currentActor == 4) {
     boss[0].selectAction(characters, boss, 4);
     // ggprint8b(&r, 16, 0xFFFFFF, "press 5 for boss to attack all");
     r.bot -= 20;
+    display_battleMenu();
     game.turnDone = 1;
   }
 }
