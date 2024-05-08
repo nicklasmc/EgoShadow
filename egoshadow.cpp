@@ -386,22 +386,25 @@ heroHealthBars skullHB(SKULL_HP, (hh.h4x + hh.width - 2), (hh.h4x + 2));
 class Character {
   private:
   public:
+
+    std::string name;
+    int hp;
+    int max_hp;
+    int sp; // Spell points
+    int max_sp;
+    std::string weakness;
+    std::string resistance;
+    bool isDowned;
     enum ActionList { JOKER_ACTIONS, MONA_ACTIONS, QUEEN_ACTIONS, SKULL_ACTIONS, BOSS_ACTIONS };
     ActionList actionList;
+    bool isBoss;
+
+
 
     // Character Constructor
     Character(std::string _name, int _hp, int _max_hp, int _sp, int _max_sp, std::string _weaknesses, std::string _resistances, ActionList _actionList, bool _isBoss)
       : name(_name), hp(_hp), max_hp(_max_hp), sp(_sp), max_sp(_max_sp), weakness(_weaknesses), resistance(_resistances), isDowned(false), actionList(_actionList), isBoss(_isBoss) {}
 
-    int hp;
-    int sp; // Spell points
-    int max_hp;
-    int max_sp;
-    std::string name;
-    std::string weakness;
-    std::string resistance;
-    bool isDowned;
-    bool isBoss;
 
 
     // Member function to reduce character's HP
@@ -1100,7 +1103,7 @@ class Character {
       switch (characters[characterIndex].actionList) {
         // JOKER's Turns
         case JOKER_ACTIONS: {
-                              int action = NULL;
+                              int action = 0;
                               bool validAction = false;
                               while (!validAction){
                                 std::cout << "What should JOKER do?\n";
@@ -1128,7 +1131,7 @@ class Character {
                                           }
                                           // Cure
                                   case 3: {
-                                            int target = NULL;
+                                            int target = 0;
                                             bool validTarget = false;
                                             while (!validTarget) {
                                               std::cout << "Select a target:\n";
@@ -1176,7 +1179,7 @@ class Character {
                             // MONA's Turns
         case MONA_ACTIONS: {
                              // Implement MONA's action selection logic
-                             int action = NULL;
+                             int action = 0;
                              bool validAction = false;
                              while (!validAction){
                                std::cout << "What should MONA do?\n";
@@ -1198,7 +1201,7 @@ class Character {
                                      break;
                                    }
                                  case 2: {
-                                           int target = NULL;
+                                           int target = 0;
                                            bool validTarget = false;
                                            while (!validTarget) {
                                              std::cout << "Select a target:\n";
@@ -1237,7 +1240,7 @@ class Character {
                                            break;
                                          }
                                  case 3: {
-                                           int target = NULL;
+                                           int target = 0;
                                            bool validTarget = false;
                                            while (!validTarget) {
                                              std::cout << "Select a target:\n";
@@ -1279,7 +1282,7 @@ class Character {
                            }
                            // QUEEN's Turns
         case QUEEN_ACTIONS: {
-                                int action = NULL;
+                                int action = 0;
                                 bool validAction = false;
                                 while (!validAction){
                                   std::cout << "What should QUEEN do?\n";
@@ -1306,7 +1309,7 @@ class Character {
                                               break;
                                             }
                                     case 3: {
-                                              int target = NULL;
+                                              int target = 0;
                                               bool validTarget = false;
                                               while (!validTarget) {
                                                 std::cout << "Select a target:\n";
@@ -1354,7 +1357,7 @@ class Character {
                               }
                               // SKULL's Turns
         case SKULL_ACTIONS: {
-                              int action = NULL;
+                              int action = 0;
                               bool validAction = false;
                               while (!validAction){
                                 std::cout << "What should SKULL do?\n";
@@ -1578,6 +1581,7 @@ void display_battleMenu();
 void display_game_over();
 void display_options();
 void return_to_menu();
+int exit_game();
 void display_menu();
 void display_startup();
 void display_hp();
@@ -1919,7 +1923,7 @@ void init_opengl(void)
   g.arsenetext.yc[0] = 0.0;
   g.arsenetext.yc[1] = 1.0;
 
-  unsigned char *data14 = buildAlphaData(&img[14]);
+  //unsigned char *data14 = buildAlphaData(&img[14]);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   g.jokertext.backImage = &img[14];
   glGenTextures(1, &g.jokertext.backTexture);
@@ -2058,6 +2062,12 @@ int check_keys2(XEvent *e)
         break;
       case XK_4:
         return 4;
+        break;
+      case XK_Q:
+        exit(EXIT_SUCCESS);
+        break;
+      case XK_Escape:
+        exit(EXIT_SUCCESS);
         break;
     }
   }
@@ -2252,6 +2262,11 @@ void display_options()
   return_to_menu();
 }
 
+int exit_game() {
+    std::cout << "Exiting..." << std::endl;
+    exit(EXIT_SUCCESS);
+}
+
 //Function to allow returning to menu
 void return_to_menu()
 {
@@ -2304,10 +2319,6 @@ void display_battleMenu() {
 	glEnd();
 
 
-  int width = 500;
-  int height = 100;
-  int x = 15;
-  int y = (g.yres/4) - 10;
 
   glColor3f(1.0, 1.0, 1.0);
   glEnable(GL_TEXTURE_2D);
@@ -2393,7 +2404,7 @@ void display_menu() {
   int selectedOption = 0; // Track the selected option
   bool menuActive = true; // Control variable for the menu loop
   float alpha = 0.0;
-  float introDuration = 5.0;
+  float introDuration = 3.0;
   float fadeRate = (1 / introDuration);
   // ---------------------------------Intro --------------------------------
   // Timers
@@ -2411,7 +2422,7 @@ void display_menu() {
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(0, 0, 0, 1);
   // REMOVE TO SEE INTRO
-  g.introDone = 1;
+  g.introDone = 0;
   if (!g.introDone) {
     while (elapsedTime < introDuration) {
       now = time(NULL);
@@ -2486,6 +2497,7 @@ void display_menu() {
     ggprint13(&r, 20, color, selectedOption == 0 ? "> Play Game" : "Play Game");
     ggprint13(&r, 20, color, selectedOption == 1 ? "> Credits" : "Credits");
     ggprint13(&r, 45, color, selectedOption == 2 ? "> Options" : "Options");
+    ggprint13(&r, 45, color, selectedOption == 3 ? "> Exit Game" : "Exit Game");
     ggprint13(&r, 45, color, " Press Enter to select.");
     ggprint13(&r, 45, color, " Press q to return.");
 
@@ -2512,13 +2524,16 @@ void display_menu() {
                 case 2:
                   display_options();
                   break;
+                case 3: 
+                  exit_game();
+                  break;
               }
             } else if (text[0] == 'w' || text[0] == 'W') {
               // Move selection up on 'W' or 'w'
-              selectedOption = (selectedOption - 1 + 3) % 3;
+              selectedOption = (selectedOption - 1 + 4) % 4;
             } else if (text[0] == 's' || text[0] == 'S') {
               // Move selection down on 'S' or 's'
-              selectedOption = (selectedOption + 1) % 3;
+              selectedOption = (selectedOption + 1 ) % 4;
             } 
           }
           break;
@@ -2879,7 +2894,7 @@ void render_boss_status(int damageDealt, int damageTaken, int type)
   r.bot = g.yres - 30;
   r.left = 80 + (bossBar.hb_container_length / 2);
   r.center = 1;
-  unsigned int color = 0xffffff;
+  //unsigned int color = 0xffffff;
   std::string string1;
   std::string string2;
   std::string damageString;
