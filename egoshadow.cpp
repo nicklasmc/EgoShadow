@@ -51,6 +51,7 @@ class Global;
 class X11_wrapper;
 class Character;
 int check_keys2(XEvent *e);
+int check_keys3(XEvent *e);
 //24-bit color:  8 + 8 + 8 = 24
 //               R   G   B
 //how many colors?  256*256*256 = 16-million+
@@ -68,6 +69,8 @@ int check_keys2(XEvent *e);
 
 
 
+
+void render_status_text();
 
 class Image {
   public:
@@ -116,7 +119,7 @@ class Image {
       unlink(ppmname);
     }
 };
-Image img[18] = {
+Image img[19] = {
   "fixed_titlecard.png", 
   "solaire.png", 
   "abyss.png", 
@@ -134,7 +137,8 @@ Image img[18] = {
   "jokertext.png",
   "monatext.png",
   "panthertext.png",
-  "skulltext.png"
+  "skulltext.png",
+  "winscreen.png"
   };
 
 class Texture {
@@ -148,9 +152,10 @@ class Texture {
 
 class Global {
   public:
-    bool introDone;
+    bool introDone, bossDefeated;
     int xres, yres;
     int show_credits;
+    std::string statusString;
     Texture tex;
     Texture solaire;
     Texture abyss;
@@ -171,11 +176,15 @@ class Global {
     Texture skullhead;
     Texture arsenetext;
 
+    Texture winscreen;
+
 
 		Global() {
 			//xres=1024, yres=1024;
+      bossDefeated = false;
 			xres=1080, yres=720;
 			show_credits = 0;
+      statusString = "Prepare for battle...";
 		}
 } g;
 
@@ -382,6 +391,22 @@ heroHealthBars jokerHB(JOKER_HP, (hh.h2x + hh.width - 2), (hh.h2x + 2));
 heroHealthBars pantherHB(QUEEN_HP, (hh.h3x + hh.width - 2), (hh.h3x + 2));
 heroHealthBars skullHB(SKULL_HP, (hh.h4x + hh.width - 2), (hh.h4x + 2));
 
+class gameLogic {
+  public: 
+    bool turnDone;
+    bool battleDone;
+    int currentActor;
+    int gameOrder[5];
+    gameLogic() {
+      battleDone = 0;
+      turnDone = 0;
+      currentActor = 0;
+      for (int i = 0; i < 5; i++) {
+        gameOrder[i] = i;
+      }
+    }
+} game;
+
 
 class Character {
   private:
@@ -479,6 +504,9 @@ class Character {
               std::cout << caster.name << " lands a critical hit! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
+            std::string castString = target.name + " takes " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             if (target.name == "MONA") {
                 monaHB.percentage = target.hp / monaHB.max_hp;
@@ -544,6 +572,9 @@ class Character {
               std::cout << caster.name << " lands a critical hit! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
+            std::string castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             caster.takeDamage(25);
             if (target.name == "MONA")
@@ -598,6 +629,9 @@ class Character {
               std::cout << caster.name << " lands a critical hit! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
+            std::string castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             caster.takeDamage(22);
             if (target.name == "MONA")
@@ -638,6 +672,9 @@ class Character {
         if (!target.isDowned) {
           if (caster.sp >= 10) {
             std::cout << caster.name << " casts solar!\n";
+            std::string castString = caster.name + " casts solar!";
+            g.statusString = castString;
+            render_status_text();
             int damage;
             if (caster.isBoss) {
               // If the caster is a boss, calculate different damage
@@ -657,6 +694,9 @@ class Character {
               std::cout << target.name << " resists! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n";
+            castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             caster.reduceSP(10);
             if (target.name == "MONA")
@@ -698,6 +738,9 @@ class Character {
         if (!target.isDowned) {
           if (caster.sp >= 10) {
             std::cout << caster.name << " casts tornado!\n";
+            std::string castString = caster.name + " casts tornado!";
+            g.statusString = castString;
+            render_status_text();
             int damage;
             if (caster.isBoss) {
               // If the caster is a boss, calculate different damage
@@ -717,6 +760,9 @@ class Character {
               std::cout << target.name << " resists! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n";
+            castString = target.name + " takes " + " "  + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             caster.reduceSP(10);
             if (target.name == "MONA")
@@ -758,6 +804,8 @@ class Character {
         if (!target.isDowned) {
           if (caster.sp >= 10) {
             std::cout << caster.name << " casts thunder!\n";
+            std::string castString = caster.name + " casts thunder!";
+            g.statusString = castString;
             int damage;
             if (caster.isBoss) {
               // If the caster is a boss, calculate different damage
@@ -777,6 +825,9 @@ class Character {
               std::cout << target.name << " resists! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n";
+            castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             caster.reduceSP(10);
                         if (target.name == "MONA") {
@@ -812,6 +863,8 @@ class Character {
         if (!target.isDowned) {
           if (caster.sp >= 10) {
             std::cout << caster.name << " casts blizzard!\n";
+            std::string castString = caster.name + " casts blizzard!";
+            g.statusString = castString;
             int damage;
             if (caster.isBoss) {
               // If the caster is a boss, calculate different damage
@@ -831,6 +884,9 @@ class Character {
               std::cout << target.name << " resists! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n";
+            castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             caster.reduceSP(10);
             if (target.name == "MONA")
@@ -873,6 +929,8 @@ class Character {
           if (target.hp < target.max_hp) {
             if (caster.sp >= 10) {
               std::cout << caster.name << " casts cure!\n";
+              std::string castString = caster.name + " casts cure!";
+              g.statusString = castString;
               int heal = rand() % 5 + 21;
               std::cout << target.name << " restores " << heal << " health\n";
               target.healDamage(heal);
@@ -915,6 +973,8 @@ class Character {
 
         if (caster.sp >= 10) {
           std::cout << caster.name << " casts cure all!\n";
+          std::string castString = caster.name + " casts cure all!";
+          g.statusString = castString;
           srand(time(NULL));
           for (int i = 0; i < 4; ++i) {
             if (characters[i].hp < characters[i].max_hp && !characters[i].isDowned) {
@@ -972,6 +1032,9 @@ class Character {
                 std::cout << caster.name << " lands a critical hit! \n";
               }
               std::cout << target.name << " takes " << damage << " damage \n\n";
+              std::string castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
               target.takeDamage(damage);
               if (target.name == "MONA")
               {
@@ -1023,6 +1086,9 @@ class Character {
               std::cout << caster.name << " lands a critical hit! \n";
             }
             std::cout << target.name << " takes " << damage << " damage \n\n";
+            std::string castString = target.name + " takes " + " " + std::to_string(damage) + " damage";
+            g.statusString = castString;
+            render_status_text();
             target.takeDamage(damage);
             if (target.name == "MONA")
             {
@@ -1060,6 +1126,8 @@ class Character {
       if (!caster.isDowned) {
         if (caster.sp >= 10) {
           std::cout << caster.name << " casts almighty!\n";
+          std::string castString = caster.name + " casts almighty!";
+          g.statusString = castString;
           srand(time(NULL));
           for (int i = 0; i < 4; ++i) {
             if (!characters[i].isDowned) {
@@ -1084,6 +1152,8 @@ class Character {
       if (!caster.isDowned) {
         if (target.isDowned) {
           std::cout << caster.name << " casts revive on " << target.name << "!\n";
+          std::string castString = caster.name + " casts revive on " + target.name + "!";
+          g.statusString = castString;
           target.isDowned = false; // Revive the target by setting isDowned to false
           int heal = target.max_hp / 2; // Heal the target to half of their max HP
           std::cout << target.name << " has been revived!" << "!\n\n";
@@ -1107,6 +1177,8 @@ class Character {
                               bool validAction = false;
                               while (!validAction){
                                 std::cout << "What should JOKER do?\n";
+                                g.statusString = "What should JOKER do?";
+                                render_status_text();
                                 std::cout << "1. Blizzard\n";
                                 std::cout << "2. Cleave\n";
                                 std::cout << "3. Cure\n";
@@ -1183,6 +1255,8 @@ class Character {
                              bool validAction = false;
                              while (!validAction){
                                std::cout << "What should MONA do?\n";
+                                g.statusString = "What should MONA do?";
+                                render_status_text();
                                std::cout << "1. Tornado\n";
                                std::cout << "2. Cure\n";
                                std::cout << "3. Revive\n";
@@ -1286,6 +1360,8 @@ class Character {
                                 bool validAction = false;
                                 while (!validAction){
                                   std::cout << "What should QUEEN do?\n";
+                                  g.statusString = "What should QUEEN do?";
+                                  render_status_text();
                                   std::cout << "1. SOLAR\n";
                                   std::cout << "2. SHOT\n";
                                   std::cout << "3. SPDrop\n";
@@ -1361,6 +1437,8 @@ class Character {
                               bool validAction = false;
                               while (!validAction){
                                 std::cout << "What should SKULL do?\n";
+                                g.statusString = "What should SKULL do?";
+                                render_status_text();
                                 std::cout << "1. THUNDER\n";
                                 std::cout << "2. CLEAVE\n";
                                 std::cout << "3. BASH\n";
@@ -1398,7 +1476,11 @@ class Character {
                             // BOSS's Turns
                             case BOSS_ACTIONS: {
                                 std::cout << "ARSENE's TURN\n";
+                                // std::string castString = "(Boss attacking! Hit enter to continue)";
+                                // g.statusString = castString;
+                                render_status_text();
                                 int randomAction = rand() % 8 + 1; // Random number between 1 and 8 for the available actions
+                               
                                 switch (randomAction) {
                                     // Heal Himself
                                     case 1: {
@@ -1526,27 +1608,12 @@ class Character {
                                     }
                                 }
                                 break;
+                                game.turnDone = true;
                             }
       }
     }
 
 };
-
-class gameLogic {
-  public: 
-    bool turnDone;
-    bool battleDone;
-    int currentActor;
-    int gameOrder[5];
-    gameLogic() {
-      battleDone = 0;
-      turnDone = 0;
-      currentActor = 0;
-      for (int i = 0; i < 5; i++) {
-        gameOrder[i] = i;
-      }
-    }
-} game;
 
 
 
@@ -1602,7 +1669,12 @@ void render_pantherSprite();
 void render_skullSprite();
 void render_heroHeads();
 void render_boss();
-void render_boss_status(int, int, int);
+
+bool isBossDefeated();
+
+bool isBossDefeated() {
+  return(boss->hp >= 0);
+}
 
 int* generate_initiative(int arr[]) {
   std::random_shuffle(&arr[0], &arr[5]);
@@ -1923,6 +1995,8 @@ void init_opengl(void)
   g.arsenetext.yc[0] = 0.0;
   g.arsenetext.yc[1] = 1.0;
 
+
+
   //unsigned char *data14 = buildAlphaData(&img[14]);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   g.jokertext.backImage = &img[14];
@@ -1983,6 +2057,21 @@ void init_opengl(void)
   g.skulltext.xc[1] = 1.0;
   g.skulltext.yc[0] = 0.0;
   g.skulltext.yc[1] = 1.0;
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  g.winscreen.backImage = &img[16];
+  glGenTextures(1, &g.winscreen.backTexture);
+  w = g.winscreen.backImage->width;
+  h = g.winscreen.backImage->height;
+  glBindTexture(GL_TEXTURE_2D, g.winscreen.backTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0,
+               GL_RGB, GL_UNSIGNED_BYTE, g.winscreen.backImage->data);
+  g.winscreen.xc[0] = 0.0;
+  g.winscreen.xc[1] = 1.0;
+  g.winscreen.yc[0] = 0.0;
+  g.winscreen.yc[1] = 1.0;
 }
 
 void init() {
@@ -2038,6 +2127,12 @@ int check_keys(XEvent *e)
         break;
       case XK_9:
         break;
+      case XK_q:
+        exit(EXIT_SUCCESS);
+        break;
+      case XK_Q:
+        exit(EXIT_SUCCESS);
+        break;
       case XK_Escape:
         return 1;
     }
@@ -2046,6 +2141,35 @@ int check_keys(XEvent *e)
 }
 
 int check_keys2(XEvent *e)
+{
+  //Was there input from the keyboard?
+  if (e->type == KeyPress) {
+    int key = XLookupKeysym(&e->xkey, 0);
+    switch (key) {
+      case XK_1:
+        return 1;
+        break;
+      case XK_2:
+        return 2;
+        break;
+      case XK_3:
+        return 3;
+        break;
+      case XK_4:
+        return 4;
+        break;
+      case XK_Q:
+        exit(EXIT_SUCCESS);
+        break;
+      case XK_Escape:
+        exit(EXIT_SUCCESS);
+        break;
+    }
+  }
+  return 0;
+}
+
+int check_keys3(XEvent *e)
 {
   //Was there input from the keyboard?
   if (e->type == KeyPress) {
@@ -2112,6 +2236,8 @@ void play_game()
 		}
 		i++;
 		if (i == 5) i = 0;
+
+    
 	}
 	cleanup_fonts();
 }
@@ -2422,7 +2548,7 @@ void display_menu() {
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(0, 0, 0, 1);
   // REMOVE TO SEE INTRO
-  g.introDone = 0;
+  g.introDone = 1;
   if (!g.introDone) {
     while (elapsedTime < introDuration) {
       now = time(NULL);
@@ -2883,42 +3009,47 @@ void render_currentHero() {
   glDisable(GL_TEXTURE_2D);
 }
 
-void render_boss_status(int damageDealt, int damageTaken, int type)
+void render_status_text()
 {
 
   // 0 = took damage
   // 1 = dealt damage
 
-  x11.swapBuffers();
+  // x11.swapBuffers();
   Rect r;
   r.bot = g.yres - 30;
-  r.left = 80 + (bossBar.hb_container_length / 2);
+  // r.left = 150 + (bossBar.hb_container_length / 2);
+  r.left = g.xres - 250;
   r.center = 1;
   //unsigned int color = 0xffffff;
-  std::string string1;
-  std::string string2;
-  std::string damageString;
-  std::cout << "Init damage dealt: " << damageDealt << " damage taken: " << damageTaken << " type: " << type << std::endl;
-  if (type == 0)
-  {
-    std::cout << "Taking damage...." << std::endl;
-    string1 = "Arsene took ";
-    string2 = std::to_string(damageTaken);
-    std::cout << "damage cast : " << string2 << std::endl;
-  }
-  else if (type == 1)
-  {
-    std::cout << "Dealing damage...." << std::endl;
-    string1 = "Arsene dealt ";
-    string2 = std::to_string(damageDealt);
-  }
-  
-  damageString = " damage!";
-  std::string fullString = string1 + string2;
-  const char *finishedString = fullString.c_str();
-  std::cout << "Full damage string " << fullString << std::endl;
-  ggprint13(&r, 45, 0x00ff0000, finishedString);
+
+
+   const char* statusCString = g.statusString.c_str();
+
+
+  ggprint13(&r, 45, 0x00ff0000, statusCString);
 }
+
+// void render_heroDamage_text()
+// {
+
+//   // 0 = took damage
+//   // 1 = dealt damage
+
+//   // x11.swapBuffers();
+//   Rect r;
+//   r.bot = g.yres - 30;
+//   r.left = 150 + (bossBar.hb_container_length / 2);
+//   r.center = 1;
+//   //unsigned int color = 0xffffff;
+
+
+//    const char* statusCString = g.statusString.c_str();
+
+
+//   ggprint13(&r, 45, 0x00ff0000, statusCString);
+// }
+
 
 void display_bossHealthBar() {
   glColor3f(1.0, 1.0, 1.0);
@@ -3003,6 +3134,32 @@ void render_boss() {
 
 }
 
+void render_win_screen()
+{
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDisable(GL_TEXTURE_2D);
+
+  glEnable(GL_TEXTURE_2D);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, g.winscreen.backTexture);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBegin(GL_QUADS);
+
+  glTexCoord2f(1.0, 0.0);
+  glVertex2i(g.xres, 0); // bottom right
+  glTexCoord2f(1.0, 1.0);
+  glVertex2i(g.xres, g.yres); // top right
+  glTexCoord2f(0.0, 1.0);
+  glVertex2i(0, g.yres); // top left
+  glTexCoord2f(0.0, 0.0);
+  glVertex2i(0, 0); // bottom left
+
+  glEnd();
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+  x11.swapBuffers();
+}
 
 void render_actual()
 {
@@ -3015,13 +3172,13 @@ void render_actual()
   // render_jokerSprite();
   // render_pantherSprite();
   // render_skullSprite();
+  render_status_text();
   render_currentHero();
   display_battleMenu();
   render_boss();
   render_heroHeads();
   display_bossHealthBar();
   render_currentHero();
-  render_boss_status(100, 100, 0);
   x11.swapBuffers();
 }
 
@@ -3029,13 +3186,30 @@ void render_actual()
 void render()
 {
 
+ 
+
 	Rect r;
 	// Set the position for displaying HP in the top left corner
 	r.bot = g.yres - 20;
 	r.left = 20;
 	r.center = 0;
-	
-	// display_game_over
+  if (isBossDefeated())
+  {
+    g.bossDefeated = true;
+  }
+
+  if (g.bossDefeated)
+  {
+    int target = 0;
+    while (!target)
+    {
+      
+      render_win_screen();
+      XEvent e = x11.getXNextEvent();
+      target = check_keys3(&e);
+    }
+  }
+  // display_game_over
 	while (bossBar.current_health < bossBar.previous_health)
 	{
 		reduce_bossHealthBar();
@@ -3076,21 +3250,21 @@ void render()
     //ggprint8b(&r, 16, 0xFFFFFF, "press 1 for joker actions");
     r.bot -= 20;
     display_battleMenu();
-    render_boss_status(100, 100, 0);
+    render_status_text();
     game.turnDone = 1;
   } else if (game.currentActor == 1) {
     characters[1].selectAction(characters, boss, 1);
     // ggprint8b(&r, 16, 0xFFFFFF, "press 2 for mona actions");
     r.bot -= 20;
     display_battleMenu();
-    render_boss_status(100, 100, 0);
+    render_status_text();
     game.turnDone = 1;
   } else if (game.currentActor == 2) {
     characters[2].selectAction(characters, boss, 2);
     // ggprint8b(&r, 16, 0xFFFFFF, "press 3 for panther actions");
     r.bot -= 20;
     display_battleMenu();
-    render_boss_status(100, 100, 0);
+    render_status_text();
     game.turnDone = 1;
   } else if (game.currentActor == 3) {
     characters[3].selectAction(characters, boss, 3);
@@ -3105,6 +3279,8 @@ void render()
     display_battleMenu();
     game.turnDone = 1;
   }
+
+
 }
 
 
